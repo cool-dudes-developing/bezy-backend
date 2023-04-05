@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -21,6 +22,7 @@ use Illuminate\Support\Carbon;
  * Relations
  * @property-read Method $method
  * @property-read Block $block
+ * @property-read ConnectedPort[] $connectedPorts
  */
 class MethodBlock extends Model
 {
@@ -41,5 +43,10 @@ class MethodBlock extends Model
     public function block(): BelongsTo
     {
         return $this->belongsTo(Block::class);
+    }
+
+    public function connectedPorts(): HasMany
+    {
+        return $this->hasMany(ConnectedPort::class);
     }
 }
