@@ -6,37 +6,40 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
  * @property string $id
- * @property string $name
- * @property string $project_id
+ * @property string $method_id
+ * @property string $block_id
+ * @property int $x
+ * @property int $y
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Carbon $deleted_at
  * Relations
- * @property-read Project $project
- * @property-read MethodBlock[] $methodBlocks
+ * @property-read Method $method
+ * @property-read Block $block
  */
-class Method extends Model
+class MethodBlock extends Model
 {
     use SoftDeletes, HasFactory, HasUuids;
 
     protected $fillable = [
-        'name',
-        'project_id',
+        'method_id',
+        'block_id',
+        'x',
+        'y',
     ];
 
-    public function project(): BelongsTo
+    public function method(): BelongsTo
     {
-        return $this->belongsTo(Project::class);
+        return $this->belongsTo(Method::class);
     }
 
-    public function methodBlocks(): HasMany
+    public function block(): BelongsTo
     {
-        return $this->hasMany(MethodBlock::class);
+        return $this->belongsTo(Block::class);
     }
 }

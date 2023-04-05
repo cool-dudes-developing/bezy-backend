@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon $deleted_at
  * Relations
  * @property-read Port[] $ports
+ * @property-read MethodBlock[] $methodBlocks
  */
 class Block extends Model
 {
@@ -32,5 +33,10 @@ class Block extends Model
     public function ports(): HasMany
     {
         return $this->hasMany(Port::class);
+    }
+
+    public function methodBlocks(): HasMany
+    {
+        return $this->hasMany(MethodBlock::class);
     }
 }
