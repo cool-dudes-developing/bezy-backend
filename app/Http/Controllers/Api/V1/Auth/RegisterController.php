@@ -10,7 +10,9 @@ class RegisterController extends Controller
 {
     public function register(RegisterRequest $request)
     {
-        $user = User::create($request->validated());
+        $validated = $request->validated();
+        $validated['password'] = bcrypt($validated['password']);
+        $user = User::create($validated);
 
         $device_name = request('device_name') ?? request()->header('User-Agent');
 
