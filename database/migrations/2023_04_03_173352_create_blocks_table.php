@@ -8,7 +8,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('blocks', function (Blueprint $table) {
-            $table->uuid();
+            $table->uuid('id');
 
             $table->string('name');
             $table->text('description');

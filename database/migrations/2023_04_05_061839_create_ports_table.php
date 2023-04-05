@@ -7,21 +7,21 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('projects', function (Blueprint $table) {
+        Schema::create('ports', function (Blueprint $table) {
             $table->uuid('id');
 
-            $table->string('slug')->unique();
+            $table->foreignUuid('block_id');
             $table->string('name');
-            $table->text('description');
-            $table->foreignUuid('user_id');
+            $table->string('type');
+            $table->boolean('direction');
 
-            $table->timestamps();
             $table->softDeletes();
+            $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('projects');
+        Schema::dropIfExists('ports');
     }
 };

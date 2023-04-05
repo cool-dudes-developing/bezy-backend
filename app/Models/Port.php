@@ -2,35 +2,38 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
  * @property string $id
+ * @property string $block_id
  * @property string $name
- * @property string $description
  * @property string $type
+ * @property bool $direction
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Carbon $deleted_at
  * Relations
- * @property-read Port[] $ports
+ * @property-read Block $block
  */
-class Block extends Model
+class Port extends Model
 {
-    use SoftDeletes, HasFactory;
+    use SoftDeletes, HasFactory, HasUuids;
 
     protected $fillable = [
+        'block_id',
         'name',
-        'description',
         'type',
+        'direction',
     ];
 
-    public function ports(): HasMany
+    public function block(): BelongsTo
     {
-        return $this->hasMany(Port::class);
+        return $this->belongsTo(Block::class);
     }
 }
