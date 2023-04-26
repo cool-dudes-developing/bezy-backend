@@ -13,7 +13,8 @@ use Illuminate\Support\Carbon;
 /**
  * @property string $id
  * @property string $method_id
- * @property string $block_id
+ * @property string $blockable_id
+ * @property string $blockable_type
  * @property int $x
  * @property int $y
  * @property Carbon $created_at
@@ -21,7 +22,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon $deleted_at
  * Relations
  * @property-read Method $method
- * @property-read Block $block
+ * @property-read Block|Method $block
  * @property-read ConnectedPort[] $connectedPorts
  */
 class MethodBlock extends Model
@@ -30,7 +31,8 @@ class MethodBlock extends Model
 
     protected $fillable = [
         'method_id',
-        'block_id',
+        'blockable_id',
+        'blockable_type',
         'x',
         'y',
     ];
@@ -40,9 +42,9 @@ class MethodBlock extends Model
         return $this->belongsTo(Method::class);
     }
 
-    public function block(): BelongsTo
+    public function block()
     {
-        return $this->belongsTo(Block::class);
+        return $this->morphTo('blockable');
     }
 
     public function connectedPorts(): HasMany

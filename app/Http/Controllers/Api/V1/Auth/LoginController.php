@@ -7,11 +7,14 @@ use Illuminate\Http\Request;
 
 class LoginController extends Controller
 {
-    public function login()
+    public function login(Request $request)
     {
-        $credentials = request(['email', 'password']);
+        $validated = $request->validate([
+            'email' => 'required|string|email',
+            'password' => 'required|string',
+        ]);
 
-        if (!auth()->attempt($credentials)) {
+        if (!auth()->attempt($validated)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 

@@ -10,9 +10,9 @@ return new class extends Migration {
         Schema::create('connected_ports', function (Blueprint $table) {
             $table->uuid('id')->primary();
 
-            $table->foreignUuid('method_block_id');
-            $table->foreignUuid('port_id');
-            $table->foreignUuid('connected_to');
+            $table->foreignUuid('method_block_id')->comment('The method block that contains the method that connects the ports.');
+            $table->foreignUuid('port_id')->comment('Source port.');
+            $table->foreignUuid('connected_to')->comment('Destination port.');
 
             $table->softDeletes();
             $table->timestamps();

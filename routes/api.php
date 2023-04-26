@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// Auth module
 Route::group(['prefix' => 'auth', 'as' => 'auth.'], function () {
     Route::post('login', [App\Http\Controllers\Api\V1\Auth\LoginController::class, 'login'])->name('login');
     Route::post('register', [App\Http\Controllers\Api\V1\Auth\RegisterController::class, 'register'])->name('register');
@@ -30,4 +31,10 @@ Route::group(['prefix' => 'auth', 'as' => 'auth.'], function () {
             return $request->user();
         });
     });
+});
+
+// Project module
+Route::group(['middleware' => 'auth:api'], function () {
+    Route::apiResource('projects', App\Http\Controllers\Api\V1\ProjectController::class);
+    Route::apiResource('projects.methods', App\Http\Controllers\Api\V1\MethodController::class);
 });

@@ -11,7 +11,8 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property string $id
- * @property string $block_id
+ * @property string $portable_id
+ * @property string $portable_type
  * @property string $name
  * @property string $type
  * @property bool $direction
@@ -26,7 +27,8 @@ class Port extends Model
     use SoftDeletes, HasFactory, HasUuids;
 
     protected $fillable = [
-        'block_id',
+        'portable_id',
+        'portable_type',
         'name',
         'type',
         'direction',

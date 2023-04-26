@@ -34,6 +34,10 @@ class RouteServiceProvider extends ServiceProvider
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
         });
+
+        $this->bind('project', function ($value) {
+            return \App\Models\Project::where('id', $value)->orWhere('slug', $value)->firstOrFail();
+        });
     }
 
     /**

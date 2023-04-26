@@ -11,7 +11,7 @@ return new class extends Migration {
             $table->uuid('id')->primary();
 
             $table->foreignUuid('method_id');
-            $table->foreignUuid('block_id');
+            $table->uuidMorphs('blockable');
             $table->integer('x');
             $table->integer('y');
 
