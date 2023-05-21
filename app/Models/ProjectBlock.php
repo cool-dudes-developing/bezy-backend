@@ -4,30 +4,24 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Carbon;
 
 /**
- * @property string $id
- * @property string $name
  * @property string $project_id
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @property Carbon $deleted_at
+ * @property string $block_id
+ * @property string $created_at
+ * @property string $updated_at
  * Relations
  * @property-read Project $project
- * @property-read MethodBlock[] $methodBlocks
+ * @property-read Block $block
  */
-class Method extends Model
+class ProjectBlock extends Pivot
 {
-    use SoftDeletes, HasFactory, HasUuids;
-
     protected $fillable = [
-        'name',
         'project_id',
+        'block_id',
     ];
 
     public function project(): BelongsTo
@@ -35,8 +29,8 @@ class Method extends Model
         return $this->belongsTo(Project::class);
     }
 
-    public function methodBlocks(): HasMany
+    public function block(): BelongsTo
     {
-        return $this->hasMany(MethodBlock::class);
+        return $this->belongsTo(Block::class);
     }
 }

@@ -36,5 +36,20 @@ Route::group(['prefix' => 'auth', 'as' => 'auth.'], function () {
 // Project module
 Route::group(['middleware' => 'auth:api'], function () {
     Route::apiResource('projects', App\Http\Controllers\Api\V1\ProjectController::class);
-    Route::apiResource('projects.methods', App\Http\Controllers\Api\V1\MethodController::class);
+    Route::apiResource('projects.methods', App\Http\Controllers\Api\V1\ProjectBlockController::class, [
+        'parameters' => [
+            'projects' => 'project',
+            'methods' => 'block'
+        ]
+    ]);
+    Route::post('projects/{project}/methods/{block}/execute', [App\Http\Controllers\Api\V1\ProjectBlockController::class, 'execute'])->name('projects.methods.execute');
+    Route::post('projects/{project}/methods/{block}/debug', [App\Http\Controllers\Api\V1\ProjectBlockController::class, 'debug'])->name('projects.methods.execute');
+    Route::get('blocks/templates', [App\Http\Controllers\Api\V1\BlockController::class, 'templates'])->name('blocks.templates');
+    Route::apiResource('methods.blocks', App\Http\Controllers\Api\V1\MethodBlockController::class, ['parameters' => [
+        'methods' => 'method',
+        'blocks' => 'block'
+    ]]);
+
+    Route::post('methods/{block}/connections', [App\Http\Controllers\Api\V1\ConnectionController::class, 'store'])->name('methods.connections.store');
+    Route::delete('methods/{block}/connections/{connection}', [App\Http\Controllers\Api\V1\ConnectionController::class, 'destroy'])->name('methods.connections.destroy');
 });

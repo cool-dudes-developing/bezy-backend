@@ -4,12 +4,13 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class MethodRequest extends BaseFormRequest
+class ProjectBlockRequest extends BaseFormRequest
 {
     public function store(): array
     {
         return [
             'name' => ['required'],
+            'description' => ['nullable'],
         ];
     }
 
@@ -17,6 +18,7 @@ class MethodRequest extends BaseFormRequest
     {
         return [
             'name' => ['required'],
+            'description' => ['nullable'],
         ];
     }
 }

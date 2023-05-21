@@ -10,7 +10,8 @@ return new class extends Migration {
         Schema::create('blocks', function (Blueprint $table) {
             $table->uuid('id')->primary();
 
-            $table->string('name');
+            $table->string('name')->nullable()->unique();
+            $table->string('title');
             $table->text('description');
             $table->string('type');
 

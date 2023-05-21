@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Models\Project;
+use App\Models\ProjectBlock;
+use App\Observers\ProjectBlockObserver;
 use App\Observers\ProjectObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -28,6 +30,7 @@ class EventServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Project::observe(ProjectObserver::class);
+        ProjectBlock::observe(ProjectBlockObserver::class);
     }
 
     /**

@@ -4,10 +4,11 @@ namespace Tests\Feature\Api;
 
 use App\Models\Method;
 use App\Models\Project;
+use App\Models\ProjectBlock;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class MethodTest extends TestCase
+class ProjectBlockTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -17,10 +18,10 @@ class MethodTest extends TestCase
     public function test_can_get_methods()
     {
         $project = Project::factory()->create();
-        Method::factory()->count(5)->create(['project_id' => $project->id]);
-        Method::factory()->count(5)->create();
+        ProjectBlock::factory()->count(5)->create(['project_id' => $project->id]);
+        ProjectBlock::factory()->count(5)->create();
         $response = $this->actingAs($project->user, 'api')
-            ->getJson(route('projects.methods.index', $project));
+            ->getJson(route('projects.blocks.index', $project));
         $response->assertStatus(200);
         $response->assertJsonStructure([
             'message',
@@ -35,7 +36,7 @@ class MethodTest extends TestCase
             ],
         ]);
         $this->assertCount(5, $response->json('data'));
-        $this->assertDatabaseCount('methods', 10);
+        $this->assertDatabaseCount('project_blocks', 10);
     }
 
     /**
@@ -44,7 +45,7 @@ class MethodTest extends TestCase
     public function test_can_get_method()
     {
         $project = Project::factory()->create();
-        $method = Method::factory()->create(['project_id' => $project->id]);
+        $method = ProjectBlock::factory()->create(['project_id' => $project->id]);
         $response = $this->actingAs($project->user, 'api')
             ->getJson(route('projects.methods.show', [$project, $method]));
         $response->assertStatus(200);
@@ -58,9 +59,8 @@ class MethodTest extends TestCase
                 'project_id',
             ],
         ]);
-        $this->assertDatabaseHas('methods', [
+        $this->assertDatabaseHas('project_blocks', [
             'id' => $response->json('data.id'),
-            'name' => $method->name,
             'project_id' => $project->id,
         ]);
     }

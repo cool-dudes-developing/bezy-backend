@@ -10,8 +10,8 @@ return new class extends Migration {
         Schema::create('method_blocks', function (Blueprint $table) {
             $table->uuid('id')->primary();
 
-            $table->foreignUuid('method_id');
-            $table->uuidMorphs('blockable');
+            $table->foreignUuid('block_id');
+            $table->foreignUuid('parent_id');
             $table->integer('x');
             $table->integer('y');
 

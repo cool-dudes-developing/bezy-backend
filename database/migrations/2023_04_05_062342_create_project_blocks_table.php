@@ -7,13 +7,11 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('methods', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+        Schema::create('project_blocks', function (Blueprint $table) {
 
-            $table->string('name');
             $table->foreignUuid('project_id');
+            $table->foreignUuid('block_id');
 
-            $table->softDeletes();
             $table->timestamps();
         });
     }

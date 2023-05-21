@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -19,13 +21,17 @@ use Illuminate\Support\Carbon;
  * Relations
  * @property-read Port[] $ports
  * @property-read MethodBlock[] $methodBlocks
+ * @property-read Connection[] $connections
+ * Attributes
+ * @property-read bool $pure
  */
 class Block extends Model
 {
-    use SoftDeletes, HasFactory;
+    use SoftDeletes, HasFactory, HasUuids;
 
     protected $fillable = [
         'name',
+        'title',
         'description',
         'type',
     ];
@@ -37,6 +43,16 @@ class Block extends Model
 
     public function methodBlocks(): HasMany
     {
-        return $this->hasMany(MethodBlock::class);
+        return $this->hasMany(MethodBlock::class, 'parent_id');
+    }
+
+    public function connections(): HasMany
+    {
+        return $this->hasMany(Connection::class);
+    }
+
+    public function getPureAttribute(): bool
+    {
+        return array_key_exists($this->name, config('blocks'));
     }
 }

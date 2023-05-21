@@ -10,7 +10,7 @@ return new class extends Migration {
         Schema::create('ports', function (Blueprint $table) {
             $table->uuid('id')->primary();
 
-            $table->uuidMorphs('portable');
+            $table->foreignUuid('block_id');
             $table->string('name');
             $table->string('type');
             $table->boolean('direction');

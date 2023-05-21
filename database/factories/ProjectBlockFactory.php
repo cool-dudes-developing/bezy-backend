@@ -2,19 +2,20 @@
 
 namespace Database\Factories;
 
-use App\Models\Method;
+use App\Models\Block;
 use App\Models\Project;
+use App\Models\ProjectBlock;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-class MethodFactory extends Factory
+class ProjectBlockFactory extends Factory
 {
-    protected $model = Method::class;
+    protected $model = ProjectBlock::class;
 
     public function definition(): array
     {
         return [
-            'name' => $this->faker->name(),
             'project_id' => Project::factory(),
+            'block_id' => Block::factory(),
         ];
     }
 }

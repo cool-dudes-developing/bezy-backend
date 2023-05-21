@@ -14,8 +14,8 @@ class MethodBlockFactory extends Factory
     public function definition(): array
     {
         return [
-            'method_id' => Method::factory(),
             'block_id' => Block::factory(),
+            'parent_id' => Block::factory(),
             'x' => $this->faker->randomNumber(),
             'y' => $this->faker->randomNumber(),
         ];
