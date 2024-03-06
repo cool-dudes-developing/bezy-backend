@@ -9,6 +9,11 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
+ * ProjectBlock is a pivot table between projects and blocks
+ * AKA methods *  are blocks that are part of a project
+ * while blocks can exist on their own and be used in multiple projects
+ * method blocks are unique to a project and can only be used in that project
+ *
  * @property string $project_id
  * @property string $block_id
  * @property string $created_at

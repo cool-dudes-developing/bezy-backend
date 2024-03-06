@@ -4,19 +4,26 @@ namespace App\Observers;
 
 use App\Models\Block;
 use App\Models\ProjectBlock;
+use App\Services\BlockService;
 
 class ProjectBlockObserver
 {
+    public function __construct(
+        private readonly BlockService $blockService
+    )
+    {
+    }
+
     public function created(ProjectBlock $projectBlock): void
     {
         $projectBlock->block->methodBlocks()->create([
-            'block_id' => Block::firstWhere('name', 'start')->id,
+            'block_id' => $this->blockService->getBlock('start')->id,
             'x' => 10,
             'y' => 10,
         ]);
 
         $projectBlock->block->methodBlocks()->create([
-            'block_id' => Block::firstWhere('name', 'end')->id,
+            'block_id' => $this->blockService->getBlock('end')->id,
             'x' => 500,
             'y' => 10,
         ]);

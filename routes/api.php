@@ -35,19 +35,52 @@ Route::group(['prefix' => 'auth', 'as' => 'auth.'], function () {
 
 // Project module
 Route::group(['middleware' => 'auth:api'], function () {
+
+    // Project module
     Route::apiResource('projects', App\Http\Controllers\Api\V1\ProjectController::class);
-    Route::apiResource('projects.methods', App\Http\Controllers\Api\V1\ProjectBlockController::class, [
+    Route::apiResource('projects.methods', App\Http\Controllers\Api\V1\ProjectMethodController::class, [
         'parameters' => [
             'projects' => 'project',
             'methods' => 'block'
         ]
     ]);
-    Route::post('projects/{project}/methods/{block}/execute', [App\Http\Controllers\Api\V1\ProjectBlockController::class, 'execute'])->name('projects.methods.execute');
-    Route::post('projects/{project}/methods/{block}/debug', [App\Http\Controllers\Api\V1\ProjectBlockController::class, 'debug'])->name('projects.methods.execute');
+    Route::apiResource('projects.tables', App\Http\Controllers\Api\V1\ProjectTableController::class, [
+        'parameters' => [
+            'projects' => 'project',
+            'tables' => 'table'
+        ]
+    ]);
+    Route::apiResource('tables.columns', App\Http\Controllers\Api\V1\TableColumnController::class, [
+        'parameters' => [
+            'projects' => 'project',
+            'tables' => 'table',
+            'columns' => 'column'
+        ]
+    ]);
+    Route::apiResource('tables.relations', App\Http\Controllers\Api\V1\TableRelationController::class, [
+        'parameters' => [
+            'tables' => 'table',
+            'relations' => 'relation'
+        ]
+    ]);
+    Route::get('tables/{table}/rows', [App\Http\Controllers\Api\V1\TableRowController::class, 'index'])->name('tables.rows.index');
+    Route::put('tables/{table}/rows', [App\Http\Controllers\Api\V1\TableRowController::class, 'update'])->name('tables.rows.update');
+
+    Route::post('projects/{project}/methods/{block}/execute', [App\Http\Controllers\Api\V1\ProjectMethodController::class, 'execute'])->name('projects.methods.execute');
+    Route::post('projects/{project}/methods/{block}/exec', [App\Http\Controllers\Api\V1\ProjectMethodController::class, 'execute'])->name('projects.methods.execute');
+    Route::post('projects/{project}/methods/{block}/debug', [App\Http\Controllers\Api\V1\ProjectMethodController::class, 'debug'])->name('projects.methods.execute');
     Route::get('blocks/templates', [App\Http\Controllers\Api\V1\BlockController::class, 'templates'])->name('blocks.templates');
+    Route::post('methods/{method}/publish', [App\Http\Controllers\Api\V1\MethodController::class, 'publish'])->name('methods.publish');
     Route::apiResource('methods.blocks', App\Http\Controllers\Api\V1\MethodBlockController::class, ['parameters' => [
         'methods' => 'method',
         'blocks' => 'block'
+    ]]);
+
+    Route::resource('assets', App\Http\Controllers\Api\V1\AssetController::class);
+
+    Route::resource('methods.ports', App\Http\Controllers\Api\V1\MethodPortController::class, ['parameters' => [
+        'methods' => 'block',
+        'ports' => 'port'
     ]]);
 
     Route::post('methods/{block}/connections', [App\Http\Controllers\Api\V1\ConnectionController::class, 'store'])->name('methods.connections.store');

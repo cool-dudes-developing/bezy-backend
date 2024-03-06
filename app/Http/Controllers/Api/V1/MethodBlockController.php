@@ -45,7 +45,7 @@ class MethodBlockController extends Controller
 
     public function update(MethodBlockRequest $request, Block $method, MethodBlock $block)
     {
-        return $this->respondWithSuccess('Method block updated', new MethodBlockResource(tap($methodBlock)->update($request->validated())));
+        return $this->respondWithSuccess('Method block updated', new MethodBlockResource(tap($block)->update($request->validated())));
     }
 
     public function destroy(Block $method, MethodBlock $block)

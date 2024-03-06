@@ -9,7 +9,7 @@ class ProjectBlockRequest extends BaseFormRequest
     public function store(): array
     {
         return [
-            'name' => ['required'],
+            'title' => ['required'],
             'description' => ['nullable'],
         ];
     }
@@ -17,7 +17,7 @@ class ProjectBlockRequest extends BaseFormRequest
     public function update(): array
     {
         return [
-            'name' => ['required'],
+            'title' => ['required'],
             'description' => ['nullable'],
         ];
     }

@@ -123,4 +123,32 @@ return [
             ],
         ]
     ],
+    'dbwrite' => [
+        'name' => 'dbwrite',
+        'title' => 'DB: write object',
+        'description' => 'Write object to Database',
+        'type' => 'database',
+        'ports' => [
+            [
+                'name' => 'In',
+                'type' => 'flow',
+                'direction' => 0,
+            ],
+            [
+                'name' => 'Out',
+                'type' => 'flow',
+                'direction' => 1,
+            ],
+            [
+                'name' => 'Table',
+                'type' => 'string',
+                'direction' => 0,
+            ],
+            [
+                'name' => 'Object',
+                'type' => 'any',
+                'direction' => 0,
+            ],
+        ]
+    ]
 ];

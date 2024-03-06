@@ -90,7 +90,7 @@ class MethodService
             fn(Connection $connection) => $this->cache[$connection->id] = $data[$connection->sourcePort->name] ?? null
         );
 
-        dump($this->cache);
+//        dump($this->cache);
 
         return $this->executeBlock($block);
     }
@@ -114,28 +114,28 @@ class MethodService
             throw new Exception('Missing required parameter');
         }
         if ($methodBlock->block->type === 'end') {
-            dump('end block reached');
+//            dump('end block reached');
             return $this->gatherParameters($methodBlock->parent->connections()->whereRelation('sourcePort', 'type', '!=', 'flow')->whereRelation('sourcePort', 'direction', '1')->get());
         }
         // if this is a pure block, we can execute it right away
         if ($methodBlock->block->pure) {
-            dump('executing flow: ' . $methodBlock->block->name);
+//            dump('executing flow: ' . $methodBlock->block->name);
             $parameters = $this->gatherParameters($methodBlock->connectionsIn()->whereRelation('sourcePort', 'type', '!=', 'flow')->get());
             $startingTime = microtime(true);
-            dump('running block: ' . $methodBlock->block->name);
+//            dump('running block: ' . $methodBlock->block->name);
             $result = GenericBlock::make($methodBlock->block->name, $parameters)->run();
-            dump('result: ', $result);
+//            dump('result: ', $result);
             $endingTime = microtime(true);
             $this->stack[$methodBlock->id]['time'] = ($endingTime - $startingTime);
 
             // save the result to cache
-            dump('saving result to cache');
-            dump($methodBlock->connectionsOut->toArray());
+//            dump('saving result to cache');
+//            dump($methodBlock->connectionsOut->toArray());
             $methodBlock->connectionsOut()->whereRelation('targetPort', 'type', '!=', 'flow')
                 ->whereRelation('targetPort', 'direction', '1')->get()->each(
                     function (Connection $connection) use ($result) {
-                        dump($connection->sourcePort->name . ' -> ' . $connection->targetPort->name);
-                        dump($connection->sourcePort->name, $result[$connection->sourcePort->name]);
+//                        dump($connection->sourcePort->name . ' -> ' . $connection->targetPort->name);
+//                        dump($connection->sourcePort->name, $result[$connection->sourcePort->name]);
                         $this->cache[$connection->id] = $result[$connection->sourcePort->name] ?? null;
                     }
                 );
@@ -150,7 +150,7 @@ class MethodService
             return $this->executeFlow($nextFlow->target);
         } else {
             // if this is not a pure block, we need to execute the flow
-            dump('diving into block: ' . $methodBlock->block->name);
+//            dump('diving into block: ' . $methodBlock->block->name);
             return $this->executeBlock($methodBlock->block);
         }
     }
@@ -162,19 +162,19 @@ class MethodService
     public function gatherParameters(Collection $connections, $targetPortName = true)
     {
         $parameters = [];
-        dump('gathering ' . $connections->count() . ' parameters');
+//        dump('gathering ' . $connections->count() . ' parameters');
         foreach ($connections as $connection) {
             // get all input ports that are not flow and gather their values
-            dump('gathering parameter: ' . $connection->sourcePort->name);
+//            dump('gathering parameter: ' . $connection->sourcePort->name);
             $parameters[$targetPortName ? $connection->targetPort->name : $connection->sourcePort->name] = $this->getParameter($connection);
         }
-        dump('gathered parameters: ', $parameters);
+//        dump('gathered parameters: ', $parameters);
         return $parameters;
     }
 
     public function getParameter(Connection $connection)
     {
-        dump('getting parameter: ' . $connection->id . '@' . $connection->source->block->name . '#' . $connection->sourcePort->name);
+//        dump('getting parameter: ' . $connection->id . '@' . $connection->source->block->name . '#' . $connection->sourcePort->name);
 
         // this way we can manage multiple connections going from same block
         if (!isset($this->cache[$connection->id])) {

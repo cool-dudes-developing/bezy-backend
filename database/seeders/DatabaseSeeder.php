@@ -58,7 +58,7 @@ class DatabaseSeeder extends Seeder
             ],
         );
 
-        $project->blocks()->attach($block);
+        $project->methods()->attach($block);
 
         $start = $block->methodBlocks()->firstOrFail();
 

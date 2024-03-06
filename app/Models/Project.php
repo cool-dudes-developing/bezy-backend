@@ -22,7 +22,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon $deleted_at
  * Relations
  * @property-read User $user
- * @property-read Block[] $blocks
+ * @property-read Block[] $methods
  */
 class Project extends Model
 {
@@ -40,8 +40,13 @@ class Project extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function blocks(): BelongsToMany
+    public function methods(): BelongsToMany
     {
         return $this->belongsToMany(Block::class, 'project_blocks', 'project_id', 'block_id')->withTimestamps()->using(ProjectBlock::class);
+    }
+
+    public function tables(): HasMany
+    {
+        return $this->hasMany(ProjectTable::class, 'project_id');
     }
 }

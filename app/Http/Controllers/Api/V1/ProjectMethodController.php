@@ -14,7 +14,13 @@ use App\Services\BlockService;
 use App\Services\MethodService;
 use Illuminate\Http\Request;
 
-class ProjectBlockController extends Controller
+/**
+ * Manage project methods
+ * methods are blocks that are part of a project
+ * while blocks can exist on their own and be used in multiple projects
+ * method blocks are unique to a project and can only be used in that project
+ */
+class ProjectMethodController extends Controller
 {
     public function __construct(
         protected MethodService $methodService,
@@ -25,12 +31,30 @@ class ProjectBlockController extends Controller
 
     public function index(Project $project)
     {
-        return $this->respondWithSuccess('Functions retrieved', MethodResource::collection($project->blocks));
+        return $this->respondWithSuccess('Functions retrieved', MethodResource::collection($project->methods));
     }
 
     public function store(ProjectBlockRequest $request, Project $project)
     {
-        return $this->respondWithSuccess('Function created', ProjectBlockResource::make($this->blockService->save($request->validated(), $project)), 201);
+        // create new block
+        $method = $this->blockService->save(
+            $request->validated() + [
+                'author_id' => auth()->id(),
+            ],
+            $project
+        );
+
+        // attach block to project
+        // make block a method
+        $project->methods()->attach($method->id);
+
+        return $this->respondWithSuccess(
+            'Function created',
+            ProjectBlockResource::make(
+                $method
+            ),
+            201
+        );
     }
 
     public function show(Project $project, Block $block)

@@ -4,12 +4,17 @@ namespace App\Providers;
 
 use App\Models\Project;
 use App\Models\ProjectBlock;
+use App\Models\ProjectTable;
+use App\Models\TableColumn;
+use App\Models\TableRelation;
 use App\Observers\ProjectBlockObserver;
 use App\Observers\ProjectObserver;
+use App\Observers\ProjectTableObserver;
+use App\Observers\TableColumnObserver;
+use App\Observers\TableRelationObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Event;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -31,6 +36,9 @@ class EventServiceProvider extends ServiceProvider
     {
         Project::observe(ProjectObserver::class);
         ProjectBlock::observe(ProjectBlockObserver::class);
+        ProjectTable::observe(ProjectTableObserver::class);
+        TableColumn::observe(TableColumnObserver::class);
+        TableRelation::observe(TableRelationObserver::class);
     }
 
     /**

@@ -35,7 +35,7 @@ class ProjectController extends Controller
     {
         return $this->respondWithSuccess(
             'Project retrieved',
-            ProjectResource::make($project->load('blocks'))
+            ProjectResource::make($project->load('methods'))
         );
     }
 
