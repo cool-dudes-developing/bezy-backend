@@ -18,15 +18,17 @@
                         />
                     </button>
                 </div>
-                <button
-                    class="flex items-center gap-2 p-1 text-xs"
-                    @click="emit('create')"
-                >
-                    <svg-icon
-                        class="h-3 w-3"
-                        name="plus"
-                    />
-                </button>
+                <slot name="actions">
+                    <button
+                        class="flex items-center gap-2 p-1 text-xs"
+                        @click="emit('create')"
+                    >
+                        <svg-icon
+                            class="h-3 w-3"
+                            name="plus"
+                        />
+                    </button>
+                </slot>
             </div>
             <small
                 v-if="$slots.subtitle"

@@ -69,15 +69,23 @@
                                 placeholder="URL"
                             />
                         </div>
-                        <button @click="Method.update(
-                            projectId,
-                            method.id,
-                            method
-                        )" class="w-1/4 bg-petronas font-bold text-dark">
+                        <button
+                            class="w-1/4 bg-petronas font-bold text-dark"
+                            @click="Method.update(projectId, method.id, method)"
+                        >
                             Save
                         </button>
                     </div>
-                    <small class="flex flex-col">
+                    <small>
+                        You can set url parameters that will be passed to start
+                        block by using the following format:
+                        <code class="bg-sec p-1">/path/:param</code>
+                        . Request body will be automatically passed as
+                        <code class="bg-sec p-1">Body</code>
+                        parameter. You can also set query parameters by adding
+                        them to your body block.
+                    </small>
+                    <small class="flex flex-col mt-3">
                         <span>Your endpoint will be accessible at</span>
                         <code class="overflow-x-auto whitespace-nowrap bg-sec">
                             {{ method.http_method.toUpperCase() }}

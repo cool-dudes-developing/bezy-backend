@@ -50,6 +50,12 @@ Route::group(['middleware' => 'auth:api'], function () {
             'tables' => 'table'
         ]
     ]);
+    Route::apiResource('projects.files', App\Http\Controllers\Api\V1\ProjectFileController::class, [
+        'parameters' => [
+            'projects' => 'project',
+            'files' => 'file'
+        ]
+    ]);
     Route::apiResource('tables.columns', App\Http\Controllers\Api\V1\TableColumnController::class, [
         'parameters' => [
             'projects' => 'project',

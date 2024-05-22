@@ -27,14 +27,16 @@ class RouteServiceProvider extends ServiceProvider
 //        $this->configureRateLimiting();
 
         $this->routes(function () {
+            Route::any('/a/p/{project}/m/{uri}', [\App\Http\Controllers\Api\V1\EndpointController::class, 'executor'])
+                ->name('executor')
+                ->where('uri', '.*');
+
             Route::middleware('api')
                 ->prefix('api')
                 ->group(base_path('routes/api.php'));
 
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
-
-            Route::
         });
 
         $this->bind('project', function ($value) {

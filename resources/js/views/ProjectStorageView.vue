@@ -1,54 +1,174 @@
 <template>
-    <div v-if="project">
-        <header class="h-12 font-header text-3xl font-bold text-pink">{{ project.name }}</header>
-        <header class="h-10 font-header text-2xl font-bold text-pink">Storage</header>
-        <TableComponent>
-            <TableHeaderRow>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Created</th>
-                <th class="w-10 border-none"></th>
-            </TableHeaderRow>
-            <input type="file" id="file-upload" hidden>
-            <TableRow>
-                <td colspan="4" class="text-center text-blue font-bold p-0">
-                    <label for="file-upload" class="cursor-pointer">
-                        <div class="h-full p-[10px]">
-                            Upload file
-                        </div>
-                    </label>
-                </td>
-            </TableRow>
-        </TableComponent>
+    <div
+        v-if="project"
+        class="p-10"
+    >
+        <v-card>
+            <template #actions>
+                <div class="flex gap-2">
+                    <button
+                        class="flex items-center gap-2 p-1 text-xs"
+                        @click="emit('create')"
+                    >
+                        <svg-icon
+                            class="h-5 w-5"
+                            name="folder-plus"
+                        />
+                    </button>
+                    <button
+                        class="flex items-center gap-2 p-1 text-xs"
+                        @click="
+                            modal.show(
+                                UploadFile,
+                                {
+                                    type: 'full',
+                                },
+                                {
+                                    onUpload: uploadFiles,
+                                }
+                            )
+                        "
+                    >
+                        <svg-icon
+                            class="h-5 w-5"
+                            name="file-plus"
+                        />
+                    </button>
+                </div>
+            </template>
+            <template #title>Storage</template>
+            <template #subtitle>Manage your project storage.</template>
+            <items-list
+                :items="files"
+                @delete="
+                    api.del(`/projects/${project.value.id}/files/${$event.id}`)
+                "
+            >
+                <template #item="{ item }">
+                    <div class="flex items-center gap-2">
+                        <svg-icon
+                            :name="
+                                item.type.startsWith('image')
+                                    ? 'file-image'
+                                    : item.type.startsWith('folder')
+                                      ? 'folder'
+                                      : item.type.startsWith('application')
+                                        ? 'file-archive'
+                                        : item.type.startsWith('audio')
+                                          ? 'file-audio'
+                                          : item.type.startsWith('video')
+                                            ? 'file-video'
+                                            : 'file'
+                            "
+                            class="h-4"
+                        />
+                        <p>
+                            {{ item.name }}
+                        </p>
+                    </div>
+                </template>
+                <template #empty>
+                    <p class="max-w-prose">
+                        You have not uploaded any files to this project. Upload
+                        files manually or through the API.
+                    </p>
+                </template>
+            </items-list>
+        </v-card>
     </div>
-    <div v-else>Error (project.value untruthy)</div>
 </template>
 
 <script lang="ts" setup>
-import { computed, inject } from 'vue'
+import { computed, inject, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useRepo } from 'pinia-orm'
 import Project from '@/models/Project'
 
 import { PageSpinnerKey } from '@/symbols'
-import TableComponent from '@/components/TableComponent.vue'
-import TableHeaderRow from '@/components/TableHeaderRow.vue'
-import TableRow from '@/components/TableRow.vue'
+import VCard from '@/components/VCard.vue'
+import ItemsList from '@/components/ItemsList.vue'
+import * as api from '@/utils/api'
+import useModal from '@/plugins/modal'
+import DialogPopup from '@/components/modals/DialogPopup.vue'
+import SvgIcon from '@/components/SvgIcon.vue'
+import UploadFile from '@/components/modals/UploadFile.vue'
 
 const route = computed(() => useRoute())
 const router = useRouter()
 const pageSpinner = inject(PageSpinnerKey)
+const modal = useModal()
 
 const project = computed(() =>
-  useRepo(Project)
-    .withAll()
-    .find(route.value.params.project as string)
+    useRepo(Project)
+        .withAll()
+        .find(route.value.params.project as string)
 )
 
 pageSpinner?.show()
+const files = ref([])
 
-Project.fetch(route.value.params.project as string)
-  .catch(() => router.push({ name: '404' }))
-  .finally(() => pageSpinner?.hide())
+onMounted(() => {
+    Project.fetch(route.value.params.project as string)
+        .then(() => {
+            api.get(`/projects/${route.value.params.project}/files`).then(
+                (response) => {
+                    files.value = response.data
+                }
+            )
+        })
+        .catch(() => router.push({ name: '404' }))
+        .finally(() => pageSpinner?.hide())
+})
+
+function uploadFiles(payload, close, m, force = false) {
+    const [filesToUpload] = payload as [FileList]
+    const formData = new FormData()
+
+    for (let i = 0; i < filesToUpload.length; i++) {
+        formData.append('files[]', filesToUpload[i])
+    }
+
+    formData.append('force', force ? 1 : 0)
+
+    api.post(`/projects/${project.value.id}/files`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    })
+        .then((response) => {
+            response.data.forEach((file) => {
+                if (!files.value.find((f) => f.name === file.name)) {
+                    files.value.push(file)
+                }
+            })
+            close()
+        })
+        .catch((err) => {
+            if (err.response.status === 409) {
+                modal.show(
+                    DialogPopup,
+                    {
+                        type: 'full',
+                        title: 'File already exists',
+                        message:
+                            'The file you are trying to upload already exists.',
+                        variant: 'danger',
+                        primary: 'Overwrite',
+                        secondary: 'Cancel',
+                    },
+                    {
+                        onPrimary: (payloadInner, closeInner, modalInner) => {
+                            closeInner()
+                            uploadFiles(payload, close, modal, true)
+                        },
+                        onSecondary: (payloadInner, closeInner, modalInner) => {
+                            closeInner()
+                            close()
+                        },
+                    }
+                )
+            }
+        })
+}
 </script>

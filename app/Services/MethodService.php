@@ -352,8 +352,14 @@ class MethodService
             case 'boolean':
                 return (bool)$value;
             case 'array':
+                if (is_array($value)) {
+                    return $value;
+                }
                 return json_decode($value, false);
             case 'object':
+                if (is_array($value)) {
+                    return $value;
+                }
                 return json_decode($value, true);
             default:
                 return $value;
