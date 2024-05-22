@@ -38,6 +38,7 @@ class MethodBlock extends Model
         'parent_id',
         'x',
         'y',
+        'constant'
     ];
 
     public function block(): BelongsTo

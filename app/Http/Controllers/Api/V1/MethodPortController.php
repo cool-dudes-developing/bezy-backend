@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\PortResource;
 use App\Models\Block;
 use App\Models\MethodBlock;
+use App\Models\Port;
 use Illuminate\Http\Request;
 
 class MethodPortController extends Controller
@@ -23,6 +24,14 @@ class MethodPortController extends Controller
         return response()->json([
             'message' => 'Port created successfully',
             'data' => PortResource::make($port)
+        ]);
+    }
+
+    public function destroy(Block $block, Port $port)
+    {
+        $port->delete();
+        return response()->json([
+            'message' => 'Ports deleted successfully'
         ]);
     }
 }

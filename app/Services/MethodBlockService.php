@@ -12,7 +12,12 @@ class MethodBlockService
 {
     public function save(Block $source, array $data): MethodBlock
     {
-        return $source->methodBlocks()->create($data);
+        $block = Block::findOrFail($data['block_id']);
+        return $source->methodBlocks()->create(
+            $data + [
+                'constant' => $block->default_constant,
+            ]
+        );
     }
 
     /**
@@ -36,8 +41,15 @@ class MethodBlockService
             throw new \Exception('Invalid port connection');
         }
 
+        $sourceType = $sourcePort->type;
+        $targetType = $targetPort->type;
+
+        // remove generics from type
+        $sourceType = explode('<', $sourceType)[0];
+        $targetType = explode('<', $targetType)[0];
+
         // Check if the port types match or if the target port is any
-        if ($sourcePort->type !== $targetPort->type && $targetPort->type !== 'any') {
+        if ($sourceType !== $targetType && $targetType !== 'any' && $sourceType !== 'any') {
             throw new \Exception('Invalid port type, expected ' . $targetPort->type . ' got ' . $sourcePort->type . '.');
         }
 

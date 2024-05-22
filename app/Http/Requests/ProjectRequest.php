@@ -8,7 +8,7 @@ class ProjectRequest extends BaseFormRequest
     {
         return [
             'name' => ['required', 'max:255'],
-            'description' => ['required'],
+            'description' => ['nullable'],
             'slug' => ['sometimes', 'max:255', 'unique:projects'],
         ];
     }

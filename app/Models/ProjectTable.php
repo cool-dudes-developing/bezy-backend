@@ -31,6 +31,11 @@ class ProjectTable extends Model
         'project_id'
     ];
 
+    public function getDatabaseNameAttribute()
+    {
+        return str_replace('-', '_', $this->id);
+    }
+
     public function columns(): HasMany
     {
         return $this->hasMany(TableColumn::class, 'table_id');
@@ -48,7 +53,7 @@ class ProjectTable extends Model
 
     public function getTableRowsAttribute()
     {
-        return \DB::connection('mysql_projects')->select("SELECT count(*) FROM `{$this->project_id}`.`{$this->id}`")[0]->{'count(*)'};
+        return \DB::connection('mysql_projects')->select("SELECT count(*) FROM `{$this->project_id}`.`{$this->database_name}`")[0]->{'count(*)'};
     }
 
 }

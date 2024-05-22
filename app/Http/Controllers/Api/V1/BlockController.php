@@ -41,7 +41,8 @@ class BlockController extends Controller
             'Block templates retrieved',
             [
                 'blocks' => BlockResource::collection(
-                    Block::whereNotIn('type', ['method', 'start', 'end'])
+                    Block::whereNotIn('type', ['method', 'start'])
+                        ->with('ports')
                         ->get()
                 ),
                 'assets' => PublishedAsset::all()
@@ -54,6 +55,15 @@ class BlockController extends Controller
                                 'id' => $asset->versions->first()->assetable_id,
                                 'name' => $asset->name
                             ],
+                            'ports' => $asset->versions->first()->block->ports->map(function ($port) {
+                                return [
+                                    'id' => $port->id,
+                                    'name' => $port->name,
+                                    'type' => $port->type,
+                                    'direction' => $port->direction,
+                                    'default' => $port->default
+                                ];
+                            })
                         ];
                     })
             ]

@@ -11,6 +11,7 @@ class ProjectBlockRequest extends BaseFormRequest
         return [
             'title' => ['required'],
             'description' => ['nullable'],
+            'type' => ['nullable', 'in:method,endpoint'],
         ];
     }
 
@@ -19,6 +20,8 @@ class ProjectBlockRequest extends BaseFormRequest
         return [
             'title' => ['required'],
             'description' => ['nullable'],
+            'http_method' => ['nullable', 'in:GET,POST,PUT,PATCH,DELETE'],
+            'uri' => ['nullable', 'string'],
         ];
     }
 }

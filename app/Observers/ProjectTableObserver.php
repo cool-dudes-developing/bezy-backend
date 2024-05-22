@@ -17,7 +17,7 @@ class ProjectTableObserver
         // Create the table in the project database
         \DB::connection('mysql_projects')->statement("CREATE DATABASE IF NOT EXISTS `{$projectTable->project_id}`");
 
-        \Schema::connection('mysql_projects')->create($projectTable->project_id . '.' . $projectTable->id, function (\Illuminate\Database\Schema\Blueprint $table) {
+        \Schema::connection('mysql_projects')->create($projectTable->project_id . '.' . $projectTable->database_name, function (\Illuminate\Database\Schema\Blueprint $table) {
             $table->uuid('id')->primary();
             $table->timestamps();
             $table->softDeletes();
@@ -69,7 +69,7 @@ class ProjectTableObserver
 
         try {
             // Delete the table in the project database
-            \DB::connection('mysql_projects')->statement("DROP TABLE IF EXISTS `{$projectTable->project_id}`.`{$projectTable->id}`");
+            \DB::connection('mysql_projects')->statement("DROP TABLE IF EXISTS `{$projectTable->project_id}`.`{$projectTable->database_name}`");
             $projectTable->forceDelete();
             $projectTable->columns()->forceDelete();
         } catch (\Exception $e) {

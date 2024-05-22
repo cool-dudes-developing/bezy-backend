@@ -8,7 +8,7 @@ class DumpBlock extends GenericBlock implements BlockInterface
 
     public function run() : array
     {
-        dump($this->data);
+//        dump($this->data);
         return [];
     }
 }

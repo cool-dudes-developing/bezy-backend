@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProjectBlockRequest;
+use App\Http\Resources\BlockResource;
 use App\Http\Resources\MethodResource;
 use App\Http\Resources\ProjectBlockResource;
 use App\Models\Block;
@@ -62,11 +63,11 @@ class ProjectMethodController extends Controller
         return $this->respondWithSuccess('Function retrieved', MethodResource::make($block->load(['methodBlocks.block', 'ports', 'connections'])));
     }
 
-    public function update(ProjectBlockRequest $request, Project $project, ProjectBlock $block)
+    public function update(ProjectBlockRequest $request, Project $project, Block $block)
     {
         $block->update($request->validated());
 
-        return $this->respondWithSuccess('Function updated', ProjectBlockResource::make($block));
+        return $this->respondWithSuccess('Function updated', MethodResource::make($block));
     }
 
     public function destroy(Project $project, Block $block)

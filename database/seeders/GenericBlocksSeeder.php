@@ -16,11 +16,18 @@ class GenericBlocksSeeder extends Seeder
 
     public function run(): void
     {
-        foreach (config('blocks') as $name => $block) {
-            if ($instance = Block::firstWhere('name', $name))
-                $this->blockService->update($instance, $block);
-            else
-                $this->blockService->save($block);
+        foreach (config('blocks') as $superGroup => $groups) {
+            foreach ($groups as $group => $blocks) {
+                foreach ($blocks as $name => $block) {
+                    if ($instance = Block::firstWhere('name', $block['name']))
+                        $this->blockService->update($instance, $block);
+                    else
+                        $this->blockService->save($block + [
+                                'category' => "$superGroup/$group",
+                            ]
+                        );
+                }
+            }
         }
     }
 }

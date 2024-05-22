@@ -17,6 +17,7 @@ class MethodBlockResource extends JsonResource
 
             'method_id' => $this->parent_id,
             'block_id' => $this->block_id,
+            'constant' => $this->when($this->block->type === 'variable', $this->constant),
 
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

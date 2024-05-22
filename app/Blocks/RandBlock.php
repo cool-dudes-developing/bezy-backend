@@ -7,7 +7,9 @@ class RandBlock extends GenericBlock implements BlockInterface
     public function run() : array
     {
         return [
-            'Result' => rand(1, 100)
+            'Result' => rand(
+                $this->Min ?? 0,
+                $this->Max ?? 100)
         ];
     }
 }

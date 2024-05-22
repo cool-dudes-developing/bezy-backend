@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -35,7 +34,10 @@ class Block extends Model
         'title',
         'description',
         'type',
-        'author_id'
+        'uri',
+        'http_method',
+        'author_id',
+        'category',
     ];
 
     public function ports(): HasMany
@@ -55,6 +57,16 @@ class Block extends Model
 
     public function getPureAttribute(): bool
     {
-        return array_key_exists($this->name, config('blocks'));
+        return collect(config('blocks'))->flatten(1)->flatMap(fn($group) => $group)->keys()->contains($this->name);
+    }
+
+    public function getDefaultConstantAttribute(): ?string
+    {
+        return str_contains($this->category, 'constant')
+            ? match ($this->ports->first()?->type) {
+                'number' => '0',
+                default => 'value',
+            }
+            : null;
     }
 }

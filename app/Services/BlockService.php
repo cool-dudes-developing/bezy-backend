@@ -29,10 +29,20 @@ class BlockService
             'description' => $data['description'],
             'type' => $data['type'] ?? 'method',
             'author_id' => $data['author_id'] ?? null,
+            'category' => $data['category'] ?? null,
         ]);
 
         if (isset($data['ports'])) {
             $block->ports()->createMany($data['ports']);
+        } else {
+            if ($block->type === 'endpoint') {
+                $block->ports()->create([
+                    'name' => 'Body',
+                    'type' => 'object',
+                    'direction' => 0,
+                    'default' => '{}',
+                ]);
+            }
         }
 
         return $block;

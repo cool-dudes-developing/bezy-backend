@@ -12,12 +12,12 @@ class TableRowController
     {
         $result = collect();
 
-        foreach ($data as $row) {
+        foreach ($data as $rowKey => $row) {
             $newRow = collect();
             foreach ($columns as $column) {
                 $newRow->put($column->id, $row->{$column->name});
             }
-            $result->push($newRow);
+            $result->put($rowKey, $newRow);
         }
 
         return $result;
@@ -41,12 +41,12 @@ class TableRowController
     {
         $result = collect();
 
-        foreach ($data as $row) {
+        foreach ($data as $rowKey => $row) {
             $newRow = collect();
             foreach ($row as $key => $value) {
                 $newRow->put($columns->firstWhere('id', $key)->name, $value);
             }
-            $result->push($newRow);
+            $result->put($rowKey, $newRow);
         }
 
         return $result;
@@ -56,7 +56,7 @@ class TableRowController
     {
         return response()->json([
             'data' => $this->replaceKeys(
-                \DB::connection('mysql_projects')->table($table->project_id . '.' . $table->id)->whereNull('deleted_at')->limit(100)->get(),
+                \DB::connection('mysql_projects')->table($table->project_id . '.' . $table->database_name)->whereNull('deleted_at')->limit(100)->get(),
                 $table->columns
             )->toArray(),
         ]);
@@ -65,7 +65,8 @@ class TableRowController
     public function update(ProjectTable $table)
     {
         $validated = request()->validate([
-            'data' => ['nullable', 'array'],
+            'added' => ['nullable', 'array'],
+            'changed' => ['nullable', 'array'],
             'delete' => ['nullable', 'array'],
         ]);
 
@@ -78,37 +79,45 @@ class TableRowController
 //            }
 //            return $newRow;
 //        });
-        $data = $this->idsToNames(collect($validated['data'] ?? []), $columns);
+        $added = $this->idsToNames(collect($validated['added'] ?? []), $columns);
+        $changed = $this->idsToNames(collect($validated['changed'] ?? []), $columns);
         $delete = $this->idsToNames(collect($validated['delete'] ?? []), $columns);
 
         $indexColumn = $columns->firstWhere('name', 'id');
 
         $model = new CustomModel();
-        $model->bind('mysql_projects', $table->project_id . '.' . $table->id);
+        $model->bind('mysql_projects', $table->project_id . '.' . $table->database_name);
         $model->fillable($columns->pluck('name')->toArray());
 //        dump($model->find('6fad70f5-fd48-4498-9e14-eac708578ada')->toArray());
 
-        $delete->each(function ($row) use ($model) {
-            $model->find($row->get('id'))?->delete();
-        });
 
         $rows = collect([]);
-        $data->each(function ($row) use ($rows, $model, $indexColumn, $table) {
-            if ($row->get('id') === null) {
-                $rows->push(
-                    $model->create($row->toArray())
-                );
+        \DB::connection('mysql_projects')->beginTransaction();
+        try {
+            $added->each(function ($row, $rowKey) use ($rows, $model) {
+                $rows->put($rowKey, $model->create($row->toArray()));
+            });
 
-            } else {
-                $instance = $model->find($row->get('id'));
+            $changed->each(function ($row, $rowKey) use ($rows, $model, $indexColumn, $table) {
+                $instance = $model->find($rowKey);
                 if ($instance === null) {
-                    $instance = $model->create($row->toArray());
+                    throw new \Exception('Row not found, id: ' . $row->get('id') . ' in table: ' . $table->database_name . ' in project: ' . $table->project_id . '.');
                 } else {
                     $instance->update($row->toArray());
                 }
-                $rows->push($instance->fresh());
-            }
-        });
+                $rows->put($rowKey, $instance->fresh());
+            });
+
+            $delete->each(function ($row) use ($model) {
+                $model->find($row->get('id'))?->delete();
+            });
+            \DB::connection('mysql_projects')->commit();
+        } catch (\Exception $e) {
+            \DB::connection('mysql_projects')->rollBack();
+            return response()->json([
+                'error' => $e->getMessage(),
+            ], 400);
+        }
 
 
         return response()->json([

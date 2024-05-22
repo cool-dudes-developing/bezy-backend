@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ProjectRequest;
 use App\Http\Resources\ProjectResource;
 use App\Models\Project;
-use Illuminate\Http\Request;
 
 class ProjectController extends Controller
 {
@@ -22,10 +21,13 @@ class ProjectController extends Controller
 
     public function store(ProjectRequest $request)
     {
+        $validated = $request->validated();
         return $this->respondWithSuccess(
             'Project created',
             ProjectResource::make(
-                auth()->user()->projects()->create($request->validated())
+                auth()->user()->projects()->create([
+                        'description' => $validated['description'] ?? ''
+                    ] + $validated)
             ),
             201
         );

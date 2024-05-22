@@ -12,6 +12,7 @@ class MethodBlockRequest extends BaseFormRequest
             'x' => ['required', 'integer'],
             'y' => ['required', 'integer'],
             'block_id' => ['required', 'string', 'exists:blocks,id'],
+            'constant' => ['nullable'],
         ];
     }
 
@@ -20,6 +21,7 @@ class MethodBlockRequest extends BaseFormRequest
         return [
             'x' => ['required', 'integer'],
             'y' => ['required', 'integer'],
+            'constant' => ['nullable'],
         ];
     }
 }

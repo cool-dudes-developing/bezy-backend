@@ -30,7 +30,12 @@ class Port extends Model
         'block_id',
         'name',
         'type',
+        'default',
         'direction',
+    ];
+
+    protected $casts = [
+        'default' => 'string',
     ];
 
     public function block(): BelongsTo

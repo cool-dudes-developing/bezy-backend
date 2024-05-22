@@ -59,6 +59,7 @@ class TableColumnController extends Controller
             'comment' => $validated['comment'] ?? null,
         ]);
 
+
         return TableColumnResource::make($column);
     }
 

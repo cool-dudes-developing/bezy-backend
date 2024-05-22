@@ -13,7 +13,7 @@ class TableColumnObserver
         // column added to database
         \Schema::connection('mysql_projects')
             ->table(
-                $tableColumn->table->project_id . '.' . $tableColumn->table->id,
+                $tableColumn->table->project_id . '.' . $tableColumn->table->database_name,
                 function (Blueprint $table) use ($tableColumn) {
                     $table->addColumn(
                         $tableColumn->type,
@@ -29,12 +29,24 @@ class TableColumnObserver
             );
     }
 
-    public function updated(TableColumn $tableColumn): void
+    public function updating(TableColumn $tableColumn): void
     {
+        $conf = config('database.connections.mysql_projects');
+        $conf['database'] = $tableColumn->table->project_id;
+        config(['database.connections.temp' => $conf]);
         // column updated in database
-        \Schema::connection('mysql_projects')
+        if ($tableColumn->isDirty('name')) {
+            \Schema::connection('temp')
+                ->table(
+                    $tableColumn->table->database_name,
+                    function (Blueprint $table) use ($tableColumn) {
+                        $table->renameColumn($tableColumn->getOriginal('name'), $tableColumn->name);
+                    }
+                );
+        }
+        \Schema::connection('temp')
             ->table(
-                $tableColumn->table->project_id . '.' . $tableColumn->table->id,
+                $tableColumn->table->database_name,
                 function (Blueprint $table) use ($tableColumn) {
                     $table->addColumn(
                         $tableColumn->type,
@@ -48,6 +60,7 @@ class TableColumnObserver
                     )->change();
                 }
             );
+        \DB::purge('temp');
     }
 
     public function deleted(TableColumn $tableColumn): void
@@ -55,7 +68,7 @@ class TableColumnObserver
         // column deleted from database
         \Schema::connection('mysql_projects')
             ->table(
-                $tableColumn->table->project_id . '.' . $tableColumn->table->id,
+                $tableColumn->table->project_id . '.' . $tableColumn->table->database_name,
                 function (Blueprint $table) use ($tableColumn) {
                     $table->dropColumn($tableColumn->name);
                 }

@@ -17,6 +17,10 @@ class MethodResource extends JsonResource
             'description' => $this->description,
             'type' => $this->type,
             'project_id' => $this->whenPivotLoaded('project_blocks', fn() => $this->pivot->project_id),
+            'http_method' => $this->http_method,
+            'uri' => $this->uri,
+            'in' => $this->ports->where('direction', false)->count(),
+            'out' => $this->ports->where('direction', true)->count(),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 

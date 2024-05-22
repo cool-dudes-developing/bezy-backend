@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
 {
@@ -15,7 +16,9 @@ class LoginController extends Controller
         ]);
 
         if (!auth()->attempt($validated)) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+            throw ValidationException::withMessages([
+                'email' => 'The provided credentials are incorrect.'
+            ]);
         }
 
         $device_name = request('device_name') ?? request()->header('User-Agent');

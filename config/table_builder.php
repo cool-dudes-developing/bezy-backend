@@ -15,6 +15,9 @@ return [
         'boolean' => [
             'type' => 'boolean',
         ],
+        'timestamp' => [
+            'type' => 'timestamp',
+        ],
     ],
     'relation_types' => [
         'one-to-one' => [
