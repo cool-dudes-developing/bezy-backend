@@ -13,7 +13,7 @@ use Illuminate\Http\JsonResponse;
 
 class MethodService
 {
-    const RECURSION_LIMIT = 1000000;
+    const RECURSION_LIMIT = 1000;
     private array $cache = [];
     private array $dependencies = [];
     private array $stack = [];
