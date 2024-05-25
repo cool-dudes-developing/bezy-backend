@@ -244,7 +244,7 @@ function prevItem() {
     }
 }
 </script>
-<style>
+<style scoped>
 /* element styling */
 .available-cell rect {
     stroke-dasharray: 5, 2;

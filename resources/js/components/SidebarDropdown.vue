@@ -43,7 +43,7 @@ function toggleDropdown() {
 }
 </script>
 
-<style>
+<style scoped>
 .dropdown > * {
   @apply gap-[5px] flex items-center font-sidebarButton font-medium;
 }
