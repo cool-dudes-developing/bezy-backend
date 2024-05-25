@@ -21,7 +21,7 @@ class MethodService
     private array $output = [];
     private float $startTime;
     private Project $project;
-    private string $runId;
+    private string $runId = 'hello';
 
     public function getProject(): Project
     {
