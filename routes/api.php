@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -37,7 +36,10 @@ Route::group(['prefix' => 'auth', 'as' => 'auth.'], function () {
 Route::group(['middleware' => 'auth:api'], function () {
 
     // Project module
-    Route::apiResource('projects', App\Http\Controllers\Api\V1\ProjectController::class);
+    Route::get('projects/archived', [App\Http\Controllers\Api\V1\ProjectController::class, 'archived'])->name('projects.archived');
+    Route::post('projects/{projectId}/restore', [App\Http\Controllers\Api\V1\ProjectController::class, 'restore'])->name('projects.archive');
+    Route::delete('projects/{projectId}', [App\Http\Controllers\Api\V1\ProjectController::class, 'destroy'])->name('projects.destroy');
+    Route::apiResource('projects', App\Http\Controllers\Api\V1\ProjectController::class)->except('destroy');
     Route::apiResource('projects.methods', App\Http\Controllers\Api\V1\ProjectMethodController::class, [
         'parameters' => [
             'projects' => 'project',
@@ -50,6 +52,16 @@ Route::group(['middleware' => 'auth:api'], function () {
             'tables' => 'table'
         ]
     ]);
+
+    Route::apiResource('projects.members', App\Http\Controllers\Api\V1\ProjectMemberController::class, [
+        'parameters' => [
+            'projects' => 'project',
+            'members' => 'user'
+        ]
+    ]);
+    Route::put('projects/{project}/accept', [App\Http\Controllers\Api\V1\ProjectMemberController::class, 'accept'])->name('projects.members.accept');
+    Route::put('projects/{project}/reject', [App\Http\Controllers\Api\V1\ProjectMemberController::class, 'reject'])->name('projects.members.reject');
+
     Route::apiResource('projects.files', App\Http\Controllers\Api\V1\ProjectFileController::class, [
         'parameters' => [
             'projects' => 'project',
@@ -82,6 +94,9 @@ Route::group(['middleware' => 'auth:api'], function () {
         'blocks' => 'block'
     ]]);
 
+    Route::get('assets/liked', [App\Http\Controllers\Api\V1\AssetController::class, 'liked'])->name('assets.liked');
+    Route::get('assets/recent', [App\Http\Controllers\Api\V1\AssetController::class, 'recent'])->name('assets.liked');
+    Route::post('assets/{asset}/like', [App\Http\Controllers\Api\V1\AssetController::class, 'like'])->name('assets.like');
     Route::resource('assets', App\Http\Controllers\Api\V1\AssetController::class);
 
     Route::resource('methods.ports', App\Http\Controllers\Api\V1\MethodPortController::class, ['parameters' => [

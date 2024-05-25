@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
@@ -50,9 +51,19 @@ class Block extends Model
         return $this->hasMany(MethodBlock::class, 'parent_id');
     }
 
+    public function usedInMethodBlocks(): HasMany
+    {
+        return $this->hasMany(MethodBlock::class, 'block_id');
+    }
+
     public function connections(): HasMany
     {
         return $this->hasMany(Connection::class);
+    }
+
+    public function projects(): BelongsToMany
+    {
+        return $this->belongsToMany(Project::class, 'project_blocks', 'block_id', 'project_id')->withTimestamps()->using(ProjectBlock::class);
     }
 
     public function getPureAttribute(): bool

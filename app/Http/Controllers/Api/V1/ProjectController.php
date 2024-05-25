@@ -22,12 +22,17 @@ class ProjectController extends Controller
     public function store(ProjectRequest $request)
     {
         $validated = $request->validated();
+        $project = Project::create([
+                'description' => $validated['description'] ?? ''
+            ] + $validated);
+        auth()->user()->projects()->attach($project, [
+            'role' => 'owner',
+            'accepted_at' => now(),
+        ]);
         return $this->respondWithSuccess(
             'Project created',
             ProjectResource::make(
-                auth()->user()->projects()->create([
-                        'description' => $validated['description'] ?? ''
-                    ] + $validated)
+                $project->load(['methods', 'members'])
             ),
             201
         );
@@ -37,7 +42,7 @@ class ProjectController extends Controller
     {
         return $this->respondWithSuccess(
             'Project retrieved',
-            ProjectResource::make($project->load('methods'))
+            ProjectResource::make($project->load(['methods', 'members']))
         );
     }
 
@@ -51,10 +56,35 @@ class ProjectController extends Controller
         );
     }
 
-    public function destroy(Project $project)
+    public function destroy(string $projectId)
     {
-        $project->delete();
+        $project = Project::withTrashed()->findOrFail($projectId);
 
-        return $this->respondWithSuccess('Project deleted');
+        if ($project->trashed()) {
+            $project->forceDelete();
+            return $this->respondWithSuccess('Project permanently deleted');
+        } else {
+            $project->delete();
+
+            return $this->respondWithSuccess('Project deleted');
+        }
+    }
+
+    public function archived()
+    {
+        return $this->respondWithSuccess(
+            'Archived projects retrieved',
+            ProjectResource::collection(
+                auth()->user()->projects()->onlyTrashed()->get()
+            )
+        );
+    }
+
+    public function restore(string $projectId)
+    {
+        $project = Project::onlyTrashed()->findOrFail($projectId);
+        $project->restore();
+
+        return $this->respondWithSuccess('Project restored');
     }
 }

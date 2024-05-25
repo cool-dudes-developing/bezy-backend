@@ -17,10 +17,18 @@ class ProjectResource extends JsonResource
             'description' => $this->description,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            'deleted_at' => $this->deleted_at,
+            'role' => $this->userRole(auth()->id()),
+            'can_edit' => in_array(
+                $this->userRole(auth()->id()),
+                ['owner', 'editor']
+            ),
+            'is_accepted' => $this->members->find(auth()->id())->pivot->accepted_at !== null,
 
             'user_id' => $this->user_id,
 
-            'methods' => MethodResource::collection($this->whenLoaded('methods'))
+            'methods' => MethodResource::collection($this->whenLoaded('methods')),
+            'members' => UserResource::collection($this->whenLoaded('members')),
         ];
     }
 }

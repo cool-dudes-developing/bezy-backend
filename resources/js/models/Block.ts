@@ -132,7 +132,7 @@ export default class Block extends Model {
     }
 
     get longsetString() {
-        return Math.max(this.name.length, this.longestPortName)
+        return Math.max(this.name.length, this.longestPortName, this.constant.length * 0.6)
     }
 
     get width() {

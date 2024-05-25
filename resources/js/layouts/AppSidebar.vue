@@ -12,7 +12,7 @@
         </router-link>
         <router-link
             :is="'div'"
-            :to="'/shared'"
+            :to="{ name: 'sharedProjects' }"
         >
             <svg-icon
                 class="h-4 w-4"
@@ -22,7 +22,7 @@
         </router-link>
         <router-link
             :is="'div'"
-            :to="'/likes'"
+            :to="{ name: 'likedAssets' }"
         >
             <svg-icon
                 class="h-4 w-4"
@@ -57,7 +57,7 @@
         </router-link>
         <router-link
             :is="'div'"
-            :to="'/archive'"
+            :to="{ name: 'archivedProjects' }"
         >
             <svg-icon
                 class="h-4 w-4"

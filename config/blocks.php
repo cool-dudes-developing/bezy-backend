@@ -105,6 +105,45 @@ return [
                     ],
                 ]
             ],
+            'fori' => [
+                'name' => 'fori',
+                'title' => 'Loop N Times',
+                'description' => 'Loop N times',
+                'type' => 'logic',
+                'ports' => [
+                    [
+                        'name' => 'In',
+                        'type' => 'flow',
+                        'direction' => 0,
+                    ],
+                    [
+                        'name' => 'Out',
+                        'type' => 'flow',
+                        'direction' => 1,
+                    ],
+                    [
+                        'name' => 'Loop',
+                        'type' => 'flow',
+                        'direction' => 1,
+                    ],
+                    [
+                        'name' => 'Start',
+                        'type' => 'number',
+                        'direction' => 0,
+                        'default' => 0
+                    ],
+                    [
+                        'name' => 'Times',
+                        'type' => 'number',
+                        'direction' => 0,
+                    ],
+                    [
+                        'name' => 'Index',
+                        'type' => 'number',
+                        'direction' => 1,
+                    ],
+                ]
+            ],
             'trycatch' => [
                 'name' => 'trycatch',
                 'title' => 'Try-Catch',
@@ -932,6 +971,29 @@ return [
                     [
                         'name' => 'String',
                         'type' => 'string',
+                        'direction' => 0,
+                    ],
+                    [
+                        'name' => 'Result',
+                        'type' => 'string',
+                        'direction' => 1,
+                    ],
+                ]
+            ],
+            'interpolate' => [
+                'name' => 'interpolate',
+                'title' => 'Interpolate',
+                'description' => 'Interpolate variables in string, e.g. "Hello, {name}"',
+                'type' => 'text',
+                'ports' => [
+                    [
+                        'name' => 'String',
+                        'type' => 'string',
+                        'direction' => 0,
+                    ],
+                    [
+                        'name' => 'Variables',
+                        'type' => 'object',
                         'direction' => 0,
                     ],
                     [
@@ -2607,6 +2669,95 @@ return [
                         'name' => 'Object',
                         'type' => 'any',
                         'direction' => 0,
+                    ],
+                ]
+            ],
+            'dbread' => [
+                'name' => 'dbread',
+                'title' => 'DB: read object',
+                'description' => 'Read object from Database',
+                'type' => 'database',
+                'ports' => [
+                    [
+                        'name' => 'In',
+                        'type' => 'flow',
+                        'direction' => 0,
+                    ],
+                    [
+                        'name' => 'Out',
+                        'type' => 'flow',
+                        'direction' => 1,
+                    ],
+                    [
+                        'name' => 'Table',
+                        'type' => 'string',
+                        'direction' => 0,
+                    ],
+                    [
+                        'name' => 'Key',
+                        'type' => 'string',
+                        'direction' => 0,
+                    ],
+                    [
+                        'name' => 'Result',
+                        'type' => 'any',
+                        'direction' => 1,
+                    ],
+                ]
+            ],
+            'dbdelete' => [
+                'name' => 'dbdelete',
+                'title' => 'DB: delete object',
+                'description' => 'Delete object from Database',
+                'type' => 'database',
+                'ports' => [
+                    [
+                        'name' => 'In',
+                        'type' => 'flow',
+                        'direction' => 0,
+                    ],
+                    [
+                        'name' => 'Out',
+                        'type' => 'flow',
+                        'direction' => 1,
+                    ],
+                    [
+                        'name' => 'Table',
+                        'type' => 'string',
+                        'direction' => 0,
+                    ],
+                    [
+                        'name' => 'Key',
+                        'type' => 'string',
+                        'direction' => 0,
+                    ],
+                ]
+            ],
+            'dblist' => [
+                'name' => 'dblist',
+                'title' => 'DB: list objects',
+                'description' => 'List objects from Database',
+                'type' => 'database',
+                'ports' => [
+                    [
+                        'name' => 'In',
+                        'type' => 'flow',
+                        'direction' => 0,
+                    ],
+                    [
+                        'name' => 'Out',
+                        'type' => 'flow',
+                        'direction' => 1,
+                    ],
+                    [
+                        'name' => 'Table',
+                        'type' => 'string',
+                        'direction' => 0,
+                    ],
+                    [
+                        'name' => 'Result',
+                        'type' => 'array<any>',
+                        'direction' => 1,
                     ],
                 ]
             ],

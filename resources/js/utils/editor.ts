@@ -51,6 +51,80 @@ export const editorCustomLink = new shapes.standard.DoubleLink({
     labels: [],
 })
 
+export const cursorShape = new shapes.standard.Rectangle({
+    size: {
+        width: 24,
+        height: 24,
+    },
+    markup: [
+        {
+            tagName: 'path',
+            selector: 'cursor',
+        },
+        {
+            tagName: 'rect',
+            selector: 'body',
+        },
+        {
+            tagName: 'text',
+            selector: 'label',
+        },
+        {
+            tagName: 'rect',
+            selector: 'message-rect'
+        },
+        {
+            tagName: 'text',
+            selector: 'message-text'
+        }
+    ],
+    attrs: {
+        cursor: {
+            fill: 'transparent',
+            stroke: '#f00',
+            'stroke-width': 2,
+            d: 'm4 4 7.07 17 2.51-7.39L21 11.07z',
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round',
+        },
+        body: {
+            fill: 'red',
+            strokeWidth: 0,
+            x: 15,
+            y: 24,
+        },
+        label: {
+            text: 'Name',
+            fill: 'white',
+            'font-size': 12,
+            'font-weight': 'bold',
+            'font-variant': 'small-caps',
+            refY: 36,
+            refX: 20,
+            'text-anchor': 'left',
+        },
+        'message-rect': {
+            fill: 'red',
+            width: 125,
+            height: 20,
+            x: 15,
+            y: 48,
+        },
+        'message-text': {
+            text: 'Really long messagagagagagagagagegegegege',
+            fill: 'white',
+            'font-size': 12,
+            textWrap: {
+                width: 100,
+                height: null,
+            },
+            refY: 52,
+            refX: 20,
+            'text-anchor': 'left',
+        }
+    },
+})
+
 export function styleLink(
     link: dia.Link,
     port: Port,
@@ -86,7 +160,7 @@ export function styleLink(
     link.appendLabel({
         attrs: {
             text: {
-                text: type,
+                text: type.split('<')[0],
                 fontFamily: 'monospace',
                 fontSize: 12,
                 fontWeight: 'bold',

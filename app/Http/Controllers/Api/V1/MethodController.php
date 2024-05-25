@@ -15,14 +15,15 @@ class MethodController extends Controller
             'name' => $method->title,
             'description' => $method->description,
             'downloads' => 0,
+            'block_id' => $method->id,
         ]);
 
-        $asset->versions()->create([
-            'assetable_type' => Block::class,
-            'assetable_id' => $method->id,
-            'version' => 1,
-            'type' => 'release'
-        ]);
+//        $asset->versions()->create([
+//            'assetable_type' => Block::class,
+//            'assetable_id' => $method->id,
+//            'version' => 1,
+//            'type' => 'release'
+//        ]);
 
         return $this->respondWithSuccess('Method published', $asset);
     }

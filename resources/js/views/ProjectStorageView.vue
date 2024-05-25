@@ -73,6 +73,14 @@
                         files manually or through the API.
                     </p>
                 </template>
+                <template #additional-actions="{item}">
+                    <button @click="downloadItem(item)">
+                        <svg-icon
+                            class="h-4 w-4"
+                            name="file-down"
+                        />
+                    </button>
+                </template>
             </items-list>
         </v-card>
     </div>
@@ -120,6 +128,13 @@ onMounted(() => {
         .catch(() => router.push({ name: '404' }))
         .finally(() => pageSpinner?.hide())
 })
+
+function downloadItem(item) {
+    const link = document.createElement('a')
+    link.href = `/storage/${item.path}`
+    link.download = item.name
+    link.click()
+}
 
 function uploadFiles(payload, close, m, force = false) {
     const [filesToUpload] = payload as [FileList]

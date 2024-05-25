@@ -85,10 +85,10 @@
                         parameter. You can also set query parameters by adding
                         them to your body block.
                     </small>
-                    <small class="flex flex-col mt-3">
+                    <small class="mt-3 flex flex-col">
                         <span>Your endpoint will be accessible at</span>
                         <code class="overflow-x-auto whitespace-nowrap bg-sec">
-                            {{ method.http_method.toUpperCase() }}
+                            {{ method.http_method?.toUpperCase() }}
                             https://api.bezy.mutado.dev/a/p/{{ projectId }}/m/{{
                                 method.uri
                             }}
@@ -141,7 +141,10 @@
                 <small class="text-sm">
                     This is the response data from the method execution.
                 </small>
-                <template v-if="runner.response.status">
+                <template v-if="loading">
+                    <spinner-loader/>
+                </template>
+                <template v-else-if="runner.response.status">
                     <div
                         :class="{
                             'text-green-500': runner.response.status < 400,
@@ -236,7 +239,8 @@
         </div>
         <div class="grow"></div>
         <button
-            class="sticky bottom-0 w-full bg-petronas py-3 font-bold text-dark"
+            :disabled="loading"
+            class="sticky bottom-0 w-full bg-petronas py-3 font-bold text-dark disabled:brightness-75"
             @click="send"
         >
             Execute
@@ -252,6 +256,7 @@ import SvgIcon from '@/components/SvgIcon.vue'
 import * as api from '@/utils/api'
 import ItemsList from '@/components/ItemsList.vue'
 import { useLocalStorage } from '@vueuse/core'
+import SpinnerLoader from '@/components/SpinnerLoader.vue'
 
 const props = defineProps({
     projectId: {

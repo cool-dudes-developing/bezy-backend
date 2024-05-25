@@ -19,6 +19,7 @@
                 </template>
                 <template v-else>
                     <input
+                        ref="fileInput"
                         hidden
                         type="file"
                     />
@@ -31,6 +32,7 @@
                         @dragleave="dragOver = false"
                         @dragover.prevent
                         @drop.prevent="drop"
+                        @click="openFileExplorer"
                     >
                         <span class="pointer-events-none text-acc">
                             Choose a file
@@ -60,11 +62,16 @@ const emit = defineEmits(['upload'])
 
 const dragOver = ref(false)
 const files = ref<FileList | null>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
 
 function drop(event: DragEvent) {
     event.preventDefault()
     dragOver.value = false
     files.value = event.dataTransfer?.files
+}
+
+function openFileExplorer() {
+    fileInput.value?.click()
 }
 </script>
 

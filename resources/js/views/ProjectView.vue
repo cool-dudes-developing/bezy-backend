@@ -22,6 +22,11 @@ const project = computed(() =>
 
 pageSpinner?.show()
 Project.fetch(route.value.params.project as string)
+    .then((res) => {
+        if (!project.value?.is_accepted) {
+            router.push({ name: 'projectInvite' })
+        }
+    })
     .catch((err) => router.push({ name: '404' }))
     .finally(() => pageSpinner?.hide())
 </script>

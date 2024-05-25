@@ -116,6 +116,8 @@
             </div>
         </div>
         <editor-tools
+            :disable-publish="method?.type === 'endpoint'"
+            @publish="publish"
             @run="
                 () => {
                     modal.show(MethodRunner, {
@@ -136,26 +138,69 @@
             @add="addTemplateBlock(paper!, $event)"
             @close="closePopup"
         />
-        <button
-            :class="{
-                'translate-y-32': !showFitButton,
-            }"
-            class="absolute bottom-10 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full border border-petronas bg-dark/75 px-3 py-2 backdrop-blur duration-300"
-            @click="
-                () => {
-                    paper?.transformToFitContent({
-                        verticalAlign: 'middle',
-                    })
-                    showFitButton = false
-                }
-            "
+        <transition
+            enter-active-class="duration-300"
+            enter-from-class="translate-y-32"
+            leave-active-class="duration-300"
+            leave-to-class="translate-y-32"
         >
-            <svg-icon
-                class="h-8 w-8"
-                name="fit"
-            />
-            Fit to content
-        </button>
+            <div
+                v-if="showChat"
+                ref="chatElement"
+                class="absolute bottom-10 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full border border-petronas bg-dark/75 px-3 py-2 outline-1 backdrop-blur duration-300 focus-within:outline"
+            >
+                <input
+                    ref="chatInput"
+                    v-model="chatMessage"
+                    class="appearance-none bg-dark/75 text-white outline-0 ring-0"
+                    placeholder="Your message"
+                    type="text"
+                    @input="onSendMessage"
+                    @keydown.enter="
+                        () => {
+                            onSendMessage()
+                            showChat = false
+                            chatMessage = ''
+                        }
+                    "
+                    @keydown.esc="showChat = false"
+                />
+                <button
+                    class="bg-dark/75 text-white"
+                    @click="
+                        () => {
+                            onSendMessage()
+                            showChat = false
+                            chatMessage = ''
+                        }
+                    "
+                >
+                    <svg-icon
+                        class="h-6 w-6 text-petronas"
+                        name="send"
+                    />
+                </button>
+            </div>
+            <button
+                v-else-if="showFitButton"
+                class="absolute bottom-10 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full border border-petronas bg-dark/75 px-3 py-2 backdrop-blur duration-300"
+                tabindex="-1"
+                @click="
+                    () => {
+                        paper?.transformToFitContent({
+                            verticalAlign: 'middle',
+                        })
+                        showFitButton = false
+                    }
+                "
+            >
+                <svg-icon
+                    class="h-8 w-8"
+                    name="fit"
+                />
+                Fit to content
+            </button>
+        </transition>
     </div>
 </template>
 <script lang="ts" setup>
@@ -164,7 +209,7 @@
 import 'jointjs/dist/joint.css'
 import Block from '@/models/Block'
 import * as joint from 'jointjs'
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Stack } from '@/utils/stack'
 import * as api from '@/utils/api'
@@ -174,6 +219,16 @@ import BlocksPopup from '@/components/BlocksPopup.vue'
 import EditorTools from '@/components/EditorTools.vue'
 import useModal from '@/plugins/modal'
 import MethodRunner from '@/components/modals/MethodRunner.vue'
+import { useEcho } from '@/composables/echo'
+import {
+    onClickOutside,
+    useMagicKeys,
+    useThrottleFn,
+    whenever,
+} from '@vueuse/core'
+import SvgIcon from '@/components/SvgIcon.vue'
+import chroma from 'chroma-js'
+import User from '@/models/User'
 
 const router = useRouter()
 const runner = ref<string | null>(null)
@@ -197,6 +252,10 @@ const {
     showFitButton,
     method,
     blocks,
+    mouseMoveHook,
+    graphEventHook,
+    addCursor,
+    handleEvent,
     createPaper,
     initializeElements,
     registerEvents,
@@ -270,15 +329,178 @@ function publish() {
     })
 }
 
-const namespace = joint.shapes
-
 let paper: joint.dia.Paper | null = null
+
+const { echo } = useEcho()
+
+const activeUsers = ref([
+    // {
+    //     id: 'test',
+    //     name: 'John Doe',
+    //     color: '#ff0000',
+    //     text: chroma('#ff0000').luminance() > 0.5 ? 'black' : 'white',
+    //     position: {
+    //         x: 290,
+    //         y: 400,
+    //     },
+    // },
+])
+
+function addActiveUser(user) {
+    // generate random color that is not used by any other user
+    let color = chroma.scale('Spectral').colors(10)
+    let usedColors = activeUsers.value.map((u) => u.color)
+    let availableColors = color.filter((c) => !usedColors.includes(c))
+    let randomColor =
+        availableColors[Math.floor(Math.random() * availableColors.length)]
+    activeUsers.value.push({
+        id: user.id,
+        name: user.name,
+        color: randomColor,
+        text: chroma(randomColor).luminance() > 0.5 ? 'black' : 'white',
+        position: {
+            x: 290 + Math.random() * 100,
+            y: 400 + Math.random() * 100,
+        },
+    })
+}
+
+const magicKeys = useMagicKeys()
+const showChat = ref(false)
+const chatInput = ref<HTMLInputElement | null>(null)
+const chatElement = ref<HTMLDivElement | null>(null)
+const chatMessage = ref('')
+onClickOutside(chatElement, () => {
+    showChat.value = false
+})
+whenever(magicKeys.Slash, () => {
+    showChat.value = true
+    setTimeout(() => {
+        chatInput.value?.focus()
+    }, 200)
+})
+
+function updateCursor(params) {
+    const user_index = activeUsers.value.findIndex((u) => u.id === params.id)
+    console.log(params)
+    if (user_index !== -1) {
+        if (params.x && params.y)
+            activeUsers.value[user_index].position = {
+                x: params.x,
+                y: params.y,
+            }
+        if (params.message) {
+            activeUsers.value[user_index].message = params.message
+
+            if (activeUsers.value[user_index].timeout)
+                clearTimeout(activeUsers.value[user_index].timeout)
+
+            activeUsers.value[user_index].timeout = setTimeout(() => {
+                activeUsers.value[user_index].message = ''
+                const u = activeUsers.value[user_index]
+                addCursor(
+                    u.id,
+                    u.name,
+                    u.message,
+                    u.color,
+                    u.position?.x ?? 0,
+                    u.position?.y ?? 0
+                )
+            }, 5000)
+        }
+    } else {
+        addActiveUser({
+            id: params.id,
+            name: 'Unknown',
+        })
+    }
+    const u = activeUsers.value[user_index]
+    if (u) {
+        console.log(u.message)
+        addCursor(
+            u.id,
+            u.name,
+            u.message,
+            u.color,
+            u.position?.x ?? 0,
+            u.position?.y ?? 0
+        )
+    }
+}
+
+const channel = echo
+    .join(`methods.${props.methodId}`)
+    .here((users) => {
+        users.forEach((user) => addActiveUser(user))
+    })
+    .joining((user) => {
+        addActiveUser(user)
+    })
+    .leaving((user) => {
+        const index = activeUsers.value.findIndex((u) => u.id === user.id)
+        if (index !== -1) {
+            activeUsers.value.splice(index, 1)
+        }
+    })
+    .listenForWhisper('mouseMove', (params) => {
+        updateCursor(params)
+    })
+    .listenForWhisper('event', (params) => {
+        handleEvent(params)
+    })
+    .listenForWhisper('message', (params) => {
+        console.log('got message', params)
+        updateCursor(params)
+    })
+
+function onSendMessage() {
+    if (chatMessage.value.trim() === '') return
+    console.log('Sending message', chatMessage.value.trim())
+    channel.whisper('message', {
+        id: User.currentUser?.id,
+        message: chatMessage.value.trim(),
+    })
+}
 
 onMounted(() => {
     console.log('Initializing graph')
     paper = createPaper()
     initializeElements()
     registerEvents(paper)
+    const throttleMouse = useThrottleFn((params) => {
+        channel.whisper('mouseMove', {
+            id: User.currentUser?.id,
+            ...params,
+        })
+    }, 100)
+    const throttleEvent = useThrottleFn((params) => {
+        channel.whisper('event', params)
+    }, 200)
+
+    addCursor(
+        'test',
+        'Nazar',
+        'Really long text that should be wrapped in three lines. Or even more',
+        'red',
+        290,
+        400
+    )
+    setTimeout(() => {
+        addCursor('test', 'Nazar', 'Finish', 'green', 290, 450)
+    }, 1000)
+    setTimeout(() => {
+        addCursor('test', 'Nazar', 'Finish', 'green', 600, 400)
+    }, 2000)
+    mouseMoveHook.on((e) => {
+        throttleMouse(e)
+    })
+    graphEventHook.on((e) => {
+        if (e.type === 'element-move') {
+            throttleEvent(e)
+        } else {
+            channel.whisper('event', e)
+        }
+    })
 })
 </script>
 <style>

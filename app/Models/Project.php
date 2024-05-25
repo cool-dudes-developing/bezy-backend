@@ -49,4 +49,14 @@ class Project extends Model
     {
         return $this->hasMany(ProjectTable::class, 'project_id');
     }
+
+    public function members(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'project_members', 'project_id', 'user_id')->withPivot(['role', 'accepted_at'])->withTimestamps();
+    }
+
+    public function userRole(string $id)
+    {
+        return $this->members->find($id)->pivot->role;
+    }
 }

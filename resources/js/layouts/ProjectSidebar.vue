@@ -1,18 +1,22 @@
 <template>
     <aside class="flex flex-col gap-[15px] bg-[#1f1e1e] px-[20px] py-[30px]">
-        <h3 class="font-header text-2xl font-bold text-[#f0f0f0] line-clamp-1">
-            {{ project?.name }}
-        </h3>
-        <router-link
-            :is="'div'"
-            :to="{ name: '404' }"
-        >
-            <svg-icon
-                class="h-4 w-4"
-                name="image"
-            />
-            Frontend
-        </router-link>
+        <div class="flex items-center">
+            <router-link
+                :to="{
+                    name: 'projects',
+                }"
+            >
+                <svg-icon
+                    class="h-6"
+                    name="chevron-left"
+                />
+            </router-link>
+            <h3
+                class="line-clamp-1 font-header text-2xl font-bold text-[#f0f0f0]"
+            >
+                {{ project?.name }}
+            </h3>
+        </div>
         <router-link
             :is="'div'"
             :to="{ name: 'projectBackend' }"
@@ -39,21 +43,19 @@
         >
             <svg-icon
                 class="h-4 w-4"
-                name="folder"
+                name="files"
             />
             Storage
         </router-link>
         <router-link
             :is="'div'"
-            id="hubReturn"
-            :to="{ name: 'platform' }"
-            class="mt-auto"
+            :to="{ name: 'projectTeam' }"
         >
             <svg-icon
                 class="h-4 w-4"
-                name="log-out"
+                name="people"
             />
-            Go to hub
+            Team
         </router-link>
     </aside>
 </template>
@@ -64,6 +66,7 @@ import { computed, inject } from 'vue'
 import Project from '@/models/Project'
 import { useRoute, useRouter } from 'vue-router'
 import { PageSpinnerKey } from '@/symbols'
+import SvgIcon from '@/components/SvgIcon.vue'
 
 const route = computed(() => useRoute())
 const router = useRouter()
@@ -79,12 +82,6 @@ pageSpinner?.show()
 Project.fetch(route.value.params.project as string)
     .catch((err) => router.push({ name: '404' }))
     .finally(() => pageSpinner?.hide())
-
-// const dropdownOpen = ref({ database: false, logic: false, endpoints: false, storage: false })
-
-// function toggleDropdown(key: string) {
-//   dropdownOpen.value[key] = !dropdownOpen.value[key]
-// }
 </script>
 
 <style scoped>
@@ -111,6 +108,6 @@ aside > * {
 }
 
 .router-link-active {
-    @apply text-purplePizzaz;
+    @apply text-electricBlue;
 }
 </style>

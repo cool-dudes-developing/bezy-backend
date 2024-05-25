@@ -34,6 +34,30 @@ const routes: Array<RouteRecordRaw> = [
         },
         children: [
             {
+                path: 'profile',
+                name: 'profile',
+                component: () =>
+                    import(
+                        /* webpackChunkName: "profile" */ '../views/ProfileView.vue'
+                    ),
+            },
+            {
+                path: 'shared',
+                name: 'sharedProjects',
+                component: () =>
+                    import(
+                        /* webpackChunkName: "sharedProjects" */ '../views/SharedProjectsView.vue'
+                    ),
+            },
+            {
+                path: 'likes',
+                name: 'likedAssets',
+                component: () =>
+                    import(
+                        /* webpackChunkName: "sharedProjects" */ '../views/LikedAssetsView.vue'
+                        ),
+            },
+            {
                 path: 'onboarding',
                 name: 'onboarding',
                 component: () =>
@@ -115,6 +139,22 @@ const routes: Array<RouteRecordRaw> = [
                     ),
             },
             {
+                path: 'projects/archived',
+                name: 'archivedProjects',
+                component: () =>
+                    import(
+                        /* webpackChunkName: "projects" */ '../views/ArchivedProjectsView.vue'
+                    ),
+            },
+            {
+                path: 'projects/:project/invitation',
+                name: 'projectInvite',
+                component: () =>
+                    import(
+                        /* webpackChunkName: "projectInvite" */ '../views/ProjectInviteSelectView.vue'
+                    ),
+            },
+            {
                 path: 'projects/create',
                 name: 'createProject',
                 component: () =>
@@ -134,6 +174,22 @@ const routes: Array<RouteRecordRaw> = [
                     sidebar: ProjectSidebar,
                 },
                 children: [
+                    {
+                        path: 'team/invite',
+                        name: 'projectTeamInvite',
+                        component: () =>
+                            import(
+                                /* webpackChunkName: "projectTeam" */ '../views/TeamInviteView.vue'
+                            ),
+                    },
+                    {
+                        path: 'team',
+                        name: 'projectTeam',
+                        component: () =>
+                            import(
+                                /* webpackChunkName: "projectTeam" */ '../views/ProjectTeamView.vue'
+                            ),
+                    },
                     {
                         path: 'backend',
                         name: 'projectBackend',
@@ -194,7 +250,7 @@ const routes: Array<RouteRecordRaw> = [
                             ),
                         meta: {
                             sidebar: EditorSidebar,
-                        }
+                        },
                     },
                     {
                         path: 'endpoints/create',
@@ -205,7 +261,7 @@ const routes: Array<RouteRecordRaw> = [
                             ),
                         meta: {
                             sidebar: EditorSidebar,
-                        }
+                        },
                     },
                     {
                         path: 'methods/:method',
@@ -216,7 +272,7 @@ const routes: Array<RouteRecordRaw> = [
                             ),
                         meta: {
                             sidebar: EditorSidebar,
-                        }
+                        },
                     },
                     {
                         path: 'endpoints/:endpoint',
@@ -227,7 +283,7 @@ const routes: Array<RouteRecordRaw> = [
                             ),
                         meta: {
                             sidebar: EditorSidebar,
-                        }
+                        },
                     },
                 ],
             },

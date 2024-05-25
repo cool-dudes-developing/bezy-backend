@@ -8,9 +8,15 @@ const props = defineProps({
     },
 })
 
+const url = computed(() => {
+    return `./../assets/svg/${props.name}.svg`
+})
+
 const icon = computed(() => {
+    // just some reactivity to trigger the import
+    const u = url.value
     return defineAsyncComponent(
-        () => import(`./../assets/svg/${props.name}.svg`)
+        () => import(u)
     )
 })
 </script>

@@ -41,7 +41,15 @@ class BlockController extends Controller
             'Block templates retrieved',
             [
                 'blocks' => BlockResource::collection(
-                    Block::whereNotIn('type', ['method', 'start'])
+                    Block::whereNotIn('type', ['start', 'endpoint', 'method'])
+                        ->orWhere(function ($query) {
+                            $query->where('type', 'method')
+                                ->whereHas('projects', function ($query) {
+                                    $query->whereHas('members', function ($query) {
+                                        $query->where('user_id', auth()->id());
+                                    });
+                                });
+                        })
                         ->with('ports')
                         ->get()
                 ),
@@ -51,11 +59,12 @@ class BlockController extends Controller
                             'id' => $asset->id,
                             'name' => $asset->name,
                             'description' => $asset->description,
+                            'is_liked' => $asset->usersLiked->find(auth()->id()) !== null,
                             'block' => [
-                                'id' => $asset->versions->first()->assetable_id,
+                                'id' => $asset->block_id,
                                 'name' => $asset->name
                             ],
-                            'ports' => $asset->versions->first()->block->ports->map(function ($port) {
+                            'ports' => $asset->block->ports->map(function ($port) {
                                 return [
                                     'id' => $port->id,
                                     'name' => $port->name,

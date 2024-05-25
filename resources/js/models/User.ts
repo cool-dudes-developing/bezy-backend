@@ -1,5 +1,5 @@
 import { Model, useRepo } from 'pinia-orm'
-import { HasMany, Str, Uid } from 'pinia-orm/dist/decorators'
+import { HasMany, Str, Uid, Attr } from 'pinia-orm/dist/decorators'
 import Project from './Project'
 import * as api from '@/utils/api'
 import axios from 'axios'
@@ -11,6 +11,8 @@ export default class User extends Model {
     @Uid() declare id: string
     @Str('') declare name: string
     @Str('') declare email: string
+    @Str('viewer') declare role: string
+    @Attr(null) declare accepted_at: string | null
     @HasMany(() => Project, 'user_id', 'id') declare projects: Project[]
 
     static login(email: string, password: string) {

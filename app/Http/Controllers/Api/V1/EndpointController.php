@@ -57,7 +57,7 @@ class EndpointController
         // cycle through all endpoints in the project
         foreach ($project->methods()->where('type', 'endpoint')->whereNotNull('http_method')->whereNotNull('uri')->get() as $method) {
             if ($method->http_method === $request->method()) {
-                if ($params = $this->matchUrlWithScheme($uri, $method->uri)) {
+                if (($params = $this->matchUrlWithScheme($uri, $method->uri)) !== false) {
                     if ($request->isJson())
                         $params['Body'] = $request->json()->all();
                     else if ($request->getContent())
@@ -66,7 +66,7 @@ class EndpointController
                     if ($request->query())
                         $params = array_merge($params, $request->query());
 
-                    return $this->methodService->execute($method, $params);
+                    return $this->methodService->execute($project, $method, $params);
                 }
             }
         }

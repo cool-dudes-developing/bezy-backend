@@ -6,21 +6,27 @@ use App\Blocks\GenericBlock;
 use App\Models\Block;
 use App\Models\Connection;
 use App\Models\MethodBlock;
+use App\Models\Project;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 
 class MethodService
 {
-    const RECURSION_LIMIT = 100;
+    const RECURSION_LIMIT = 1000000;
     private array $cache = [];
     private array $dependencies = [];
     private array $stack = [];
     private array $recursions = [];
     private array $output = [];
     private float $startTime;
+    private Project $project;
+    private string $runId;
 
-    private Collection $flows;
+    public function getProject(): Project
+    {
+        return $this->project;
+    }
 
     private function buildFlowTree(MethodBlock $methodBlock, Collection $flows, Collection $params): array
     {
@@ -113,32 +119,40 @@ class MethodService
     private function cleanCache(): array
     {
         $cache = [];
+
         foreach ($this->cache as $key => $value) {
-            $connection = Connection::find($key);
-            $cache[$connection->sourcePort->name] = [
-                'value' => $value,
-                'type' => $connection->sourcePort->type,
-                'direction' => $connection->sourcePort->direction,
-                'from' => $connection->source->block->title,
-                'to' => $connection->target->block->title,
-            ];
+            if ($connection = Connection::find($key)) {
+                $cache[$connection->sourcePort->name] = [
+                    'value' => $value,
+                    'type' => $connection->sourcePort->type,
+                    'direction' => $connection->sourcePort->direction,
+                    'from' => $connection->source->block->title,
+                    'to' => $connection->target->block->title,
+                ];
+            } else {
+                $cache[$key] = $value;
+            }
         }
         return $cache;
     }
 
-    public function debug(Block $block, array $data): JsonResponse
+    public function debug(Project $project, Block $block, array $data): JsonResponse
     {
+        $this->project = $project;
+        $status = 200;
         try {
-            $result = $this->execute($block, $data);
+            $result = $this->execute($project, $block, $data);
         } catch (Exception $e) {
+            throw $e;
             $result = $e->getMessage();
+            $status = 500;
         }
 
         return response()->json([
             'result' => $result,
             'cache' => $this->cleanCache(),
             'stack' => $this->cleanStack()
-        ]);
+        ], $status);
     }
 
     /**
@@ -147,15 +161,21 @@ class MethodService
      * @param array $data
      * @return array
      */
-    public function execute(Block $block, array $data)
+    public function execute(Project $project, Block $block, array $data, string $run_id = null)
     {
+        $this->project = $project;
+
         $this->startTime = microtime(true);
+
+        if (!$run_id) {
+            $run_id = uniqid();
+        }
 
         // hydrate cache with input data
         $block->connections()->whereRelation('sourcePort', 'type', '!=', 'flow')->whereRelation('sourcePort', 'direction', '0')->get()->each(
             fn(Connection $connection) => $this->setConnectionVariable($connection, $this->cast(
                 $data[$connection->sourcePort->name] ?? null,
-                $connection->sourcePort->type
+                $connection
             ))
         );
 
@@ -211,6 +231,11 @@ class MethodService
         if ($methodBlock->block->pure) {
 //            dump('executing flow: ' . $methodBlock->block->name);
             $parameters = $this->gatherParameters($methodBlock->connectionsIn()->whereRelation('sourcePort', 'type', '!=', 'flow')->get());
+            if ($methodBlock->id === '9c1dcecd-50ec-402c-9f0f-1fb1fbe709b9') {
+//                dump($parameters);
+//                dump($methodBlock->connectionsIn->load(['sourcePort.block', 'targetPort.block'])->toArray());
+//                dd($methodBlock->block->title);
+            }
             if ($methodBlock->constant) {
                 $parameters['_constant'] = $methodBlock->constant;
             }
@@ -218,7 +243,8 @@ class MethodService
             $genericBlock = GenericBlock::make(
                 $this,
                 $methodBlock->block->name,
-                $parameters
+                $parameters,
+                $methodBlock
             );
             $result = $genericBlock->run();
 //            dump($result);
@@ -237,7 +263,7 @@ class MethodService
 //                        dump($connection->sourcePort->name, $result[$connection->sourcePort->name]);
                         $this->setConnectionVariable($connection, $this->cast(
                             $result[$connection->sourcePort->name] ?? null,
-                            $connection->sourcePort->type
+                            $connection
                         ));
                     }
                 );
@@ -270,8 +296,10 @@ class MethodService
             // execute external method in different context
             // this way we can manage multiple method blocks in the same context
             $result = (new MethodService())->execute(
+                $this->project,
                 $methodBlock->block,
-                $parameters
+                $parameters,
+                $this->runId
             );
             $this->logStack($methodBlock, [
                 'parameters' => $parameters,
@@ -284,7 +312,7 @@ class MethodService
                     function (Connection $connection) use ($result) {
                         $this->setConnectionVariable($connection, $this->cast(
                             $result[$connection->sourcePort->name] ?? null,
-                            $connection->sourcePort->type
+                            $connection
                         ));
                     }
                 );
@@ -330,7 +358,7 @@ class MethodService
                 $this->setConnectionVariable($connection,
                     $this->cast(
                         $connection->targetPort->default,
-                        $connection->sourcePort->type
+                        $connection
                     )
                 );
             }
@@ -342,8 +370,13 @@ class MethodService
         return $this->cache[$connection->id];
     }
 
-    public function cast($value, $type)
+    public function cast($value, Connection $connection)
     {
+        $type = $connection->targetPort->type;
+        if ($type === 'any') {
+            $type = $connection->sourcePort->type;
+        }
+
         switch ($type) {
             case 'string':
                 return (string)$value;
@@ -366,14 +399,27 @@ class MethodService
         }
     }
 
+    private function unsetRecursiveDependencies($targetId): void
+    {
+        if (isset($this->dependencies[$targetId])) {
+            foreach ($this->dependencies[$targetId] as $dependency) {
+//                dump('unsetting dependency: ' . $dependency);
+                unset($this->cache[$dependency]);
+                $this->unsetRecursiveDependencies($dependency);
+            }
+        }
+    }
+
     public function setConnectionVariable(Connection $connection, mixed $value): void
     {
         // check if variable already cached,
         // if so, we need to update it and all its dependencies
         if (isset($this->cache[$connection->id])) {
-            foreach ($this->dependencies[$connection->id] as $dependency) {
-                unset($this->cache[$dependency]);
-            }
+            $this->unsetRecursiveDependencies($connection->id);
+//            foreach ($this->dependencies[$connection->id] as $dependency) {
+//                dump('unsetting dependency');
+//                unset($this->cache[$dependency]);
+//            }
         }
         $this->cache[$connection->id] = $value;
         $this->dependencies[$connection->id] = $connection->target->connectionsOut()->whereRelation('sourcePort', 'type', '!=', 'flow')->get()->pluck('id')->toArray();
@@ -381,11 +427,34 @@ class MethodService
 
     public function setVariable(string $variable, mixed $value): void
     {
+        if (isset($this->cache[$variable])) {
+            $this->unsetRecursiveDependencies($variable);
+//            if (isset($this->dependencies[$variable])) {
+//                foreach ($this->dependencies[$variable] as $dependency) {
+////                    dump('unseting');
+//                    unset($this->cache[$dependency]);
+//                }
+//            }
+        }
         $this->cache[$variable] = $value;
     }
 
-    public function getVariable(string $variable): mixed
+    public function getVariable($outConnections, string $variable): mixed
     {
+        $deps = $this->dependencies[$variable] ?? [];
+        foreach ($outConnections as $outConnection) {
+            if (!in_array($outConnection->id, $deps)) {
+                $deps[] = $outConnection->id;
+            }
+
+//            dd($outConnection->target->connectionsOut()->whereRelation('sourcePort', 'type', '!=', 'flow')->get()->load(['sourcePort.block', 'targetPort.block'])->toArray());
+            foreach ($outConnection->target->connectionsOut()->whereRelation('sourcePort', 'type', '!=', 'flow')->get() as $connection) {
+                if (!in_array($connection->id, $deps)) {
+                    $deps[] = $connection->id;
+                }
+            }
+        }
+        $this->dependencies[$variable] = $deps;
         return $this->cache[$variable] ?? null;
     }
 

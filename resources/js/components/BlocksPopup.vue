@@ -6,12 +6,12 @@
             class="absolute -left-3 top-0 h-6 w-6 rounded-full border-4 border-petronas bg-[#353648]"
         />
         <div
-            class="flex h-6 w-full flex-row justify-between rounded-tr-xl bg-petronas pl-4 text-dark"
+            class="flex h-6 flex-row justify-between rounded-tr-xl bg-petronas pl-4 text-dark"
         >
             <h1 class="">Add block</h1>
             <button @click="emit('close')">
                 <svg-icon
-                    class="aspect-square h-full"
+                    class="aspect-square h-6 w-6"
                     name="close"
                 />
             </button>
@@ -138,13 +138,28 @@ const templateBlocks = computed(() =>
         .where('method_id', null)
         .withAll()
         .get()
+        .map((block) => {
+            if (!block.category) block.category = 'Your Methods'
+            return block
+        })
 )
-const templateAssets = computed(() => assetRepo.value.withAll().all())
+const templateAssets = computed(() =>
+    assetRepo.value
+        .withAll()
+        .all()
+        .map((asset) => {
+            if (asset.is_liked) asset.block.category = 'Liked Assets'
+            else asset.block.category = 'Community Assets'
+            asset.block.title = asset.name
+            return asset.block
+        })
+        .filter((block) => !templateBlocks.value.find((b) => b.id === block.id))
+)
 const blocksSearch = ref('')
 const blocksFiltered = computed(() => {
     return templateBlocks.value
         .slice()
-        .concat(templateAssets.value.map((asset) => asset.block))
+        .concat(templateAssets.value)
         .filter(
             (block) =>
                 props.filter === '' ||
@@ -169,7 +184,15 @@ const blocksSearchResults = computed(() => {
 })
 
 const blocksGrouped = computed(() => {
-    return groupBy(blocksSearchResults.value, 'category')
+    return Object.fromEntries(
+        Object.entries(groupBy(blocksSearchResults.value, 'category'))
+            .sort((group, blocks) => {
+                if (group[0] === 'Your Methods') return -1
+                if (group[0] === 'Liked Assets') return -1
+                if (group[0] === 'Community Assets') return 1
+                return 0
+            })
+    )
 })
 
 const blocksGroupedFlatIds = computed(() => {

@@ -4,13 +4,14 @@ namespace App\Blocks;
 
 class ObjectSetBlock extends GenericBlock implements BlockInterface
 {
-    protected array $requiredParameters = ['Object', 'Property', 'Value'];
+    protected array $requiredParameters = ['Property', 'Value'];
 
     public function run(): array
     {
-        $this->Object[$this->Property] = $this->Value;
+        $obj = $this->Object ?? [];
+        $obj[$this->Property] = $this->Value;
         return [
-            'Result' => $this->Object
+            'Result' => $obj
         ];
     }
 }

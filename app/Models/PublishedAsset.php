@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -36,8 +37,9 @@ class PublishedAsset extends Model
     protected $fillable = [
         'name',
         'description',
-        'downloads',
+        'block_id',
         'author_id',
+        'caption'
     ];
 
     public function author(): BelongsTo
@@ -48,5 +50,27 @@ class PublishedAsset extends Model
     public function versions(): HasMany
     {
         return $this->hasMany(PublishedAssetVersion::class);
+    }
+
+    public function block(): BelongsTo
+    {
+        return $this->belongsTo(Block::class);
+    }
+
+    public function usersLiked(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_favorites');
+    }
+
+    public function getTagsAttribute()
+    {
+        return $this->block->methodBlocks->map(function ($methodBlock) {
+            return $methodBlock->block->category;
+        })->filter()->map(function ($category) {
+            $split = explode('/', $category);
+            return end($split);
+        })->filter(function ($category) {
+            return $category !== 'flow';
+        })->unique()->values();
     }
 }

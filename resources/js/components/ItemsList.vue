@@ -1,7 +1,5 @@
 <template>
-    <ul
-        class="divide-y divide-petronas/25 overflow-hidden rounded-xl bg-dark"
-    >
+    <ul class="divide-y divide-petronas/25 overflow-hidden rounded-xl bg-dark">
         <template v-if="items.length">
             <li
                 v-for="item in items"
@@ -11,22 +9,41 @@
                         'cursor-pointer': pointer,
                     },
                 ]"
-                class="flex justify-between px-2 first:pt-1 last:pb-1"
+                class="flex justify-between px-2 first:pt-1 last:pb-1 cursor-pointer"
                 @click="emit('select', item)"
             >
                 <slot
                     :item="item"
                     name="item"
                 />
-                <button class="shrink-0" v-if="deleteEnabled" @click.prevent="deleteItem(item)">
-                    <svg-icon
-                        class="h-4 w-4"
-                        name="trashcan"
-                    />
-                </button>
+                <slot
+                    :on-delete="() => deleteItem(item)"
+                    :item="item"
+                    name="actions"
+                >
+                    <div class="flex items-center gap-1">
+                        <slot
+                            :item="item"
+                            name="additional-actions"
+                        />
+                        <button
+                            v-if="deleteEnabled"
+                            class="shrink-0"
+                            @click.prevent.stop="deleteItem(item)"
+                        >
+                            <svg-icon
+                                class="h-4 w-4"
+                                name="trashcan"
+                            />
+                        </button>
+                    </div>
+                </slot>
             </li>
         </template>
-        <li v-else class="p-1">
+        <li
+            v-else
+            class="p-1"
+        >
             <slot name="empty" />
         </li>
     </ul>

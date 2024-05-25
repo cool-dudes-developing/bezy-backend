@@ -10,6 +10,7 @@
                         <slot name="title" />
                     </h1>
                     <button
+                        v-if="hint !== ''"
                         class="flex items-center justify-center rounded-full border"
                     >
                         <svg-icon
@@ -20,6 +21,7 @@
                 </div>
                 <slot name="actions">
                     <button
+                        v-if="!disableCreate"
                         class="flex items-center gap-2 p-1 text-xs"
                         @click="emit('create')"
                     >
@@ -45,6 +47,17 @@
 import SvgIcon from '@/components/SvgIcon.vue'
 
 const emit = defineEmits(['create'])
+
+defineProps({
+    disableCreate: {
+        type: Boolean,
+        default: false,
+    },
+    hint: {
+        type: String,
+        default: '',
+    },
+})
 </script>
 
 <style scoped></style>

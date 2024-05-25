@@ -16,7 +16,7 @@ abstract class GenericBlock
     /**
      * @throws Exception
      */
-    public function __construct(protected readonly MethodService $service, protected array $parameters = [])
+    public function __construct(protected readonly MethodService $service, protected array $parameters = [], protected MethodBlock $methodBlock)
     {
         if (count(array_diff($this->requiredParameters, array_keys($parameters)))) {
             throw new Exception('Missing required parameters. Required: ' . implode(', ', $this->requiredParameters) . '. Given: ' . implode(', ', array_keys($parameters)));
@@ -40,7 +40,7 @@ abstract class GenericBlock
     /**
      * @throws Exception
      */
-    public static function make(MethodService $service, string $name, array $parameters = []): static
+    public static function make(MethodService $service, string $name, array $parameters = [], MethodBlock $methodBlock): static
     {
         $class = 'App\\Blocks\\' . str_replace('_', '', ucwords($name, '_')) . 'Block';
 
@@ -49,6 +49,6 @@ abstract class GenericBlock
             throw new Exception('Block ' . $class . ' not found');
         }
 
-        return new $class($service, $parameters);
+        return new $class($service, $parameters, $methodBlock);
     }
 }

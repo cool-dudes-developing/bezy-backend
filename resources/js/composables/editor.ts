@@ -1,6 +1,7 @@
 import * as joint from 'jointjs'
 import { dia } from 'jointjs'
 import {
+    cursorShape,
     editorCustomLink,
     editorLinkTools,
     offsetToLocalPoint,
@@ -17,6 +18,8 @@ import Port from '@/models/Port'
 import Connection from '@/models/Connection'
 import useModal from '@/plugins/modal'
 import Method from '@/models/Method'
+import { createEventHook } from '@vueuse/core'
+import chroma from 'chroma-js'
 
 type Position = {
     x: number
@@ -44,9 +47,22 @@ export default function useEditor(methodId: string) {
     const showFitButton = ref(false)
     let silentRemove = false
     let listenChange = true
+    const mouseMoveHook = createEventHook<Position>()
+    const graphEventHook = createEventHook<
+        Position & { id: string; type: string; options: any }
+    >()
+    const paperOffset = ref<Position>({
+        x: 0,
+        y: 0,
+    })
 
     function movePaper(paper: dia.Paper, dx: number, dy: number) {
         paper.translate(dx, dy)
+        const position = paper.clientToLocalPoint(0, 0)
+        paperOffset.value = {
+            x: -position.x,
+            y: -position.y,
+        }
         // check if any elements in view
         const elements = paper.model.getElements()
         if (elements.length) {
@@ -194,11 +210,15 @@ export default function useEditor(methodId: string) {
             if (blocksPopupOpen.value) {
                 closePopup()
             } else {
-                const coords = offsetToLocalPoint(
-                    event.originalEvent.offsetX,
-                    event.originalEvent.offsetY,
-                    paper
-                )
+                // const coords = offsetToLocalPoint(
+                //     event.originalEvent.offsetX,
+                //     event.originalEvent.offsetY,
+                //     paper
+                // )
+                const coords = {
+                    x: event.offsetX,
+                    y: event.offsetY,
+                }
                 blocksPopupType.value = 'any'
                 blocksPopupPosition.value = {
                     x: coords.x,
@@ -238,6 +258,12 @@ export default function useEditor(methodId: string) {
     function registerElementPointerEvents(paper: dia.Paper, graph: dia.Graph) {
         paper.on('element:pointerdown', (elementView) => {
             console.log('Element pointer down')
+
+            if (elementView.model.prop('type') === 'cursor') {
+                console.log('Cursor clicked')
+                return
+            }
+
             listenChange = false
 
             const position = elementView.model.getBBox()
@@ -245,9 +271,25 @@ export default function useEditor(methodId: string) {
             elementDragStartPosition = { x: position.x, y: position.y }
             console.log('Start drag')
         })
+        paper.on('element:pointermove', (elementView) => {
+            if (!elementDragStartPosition) return
+
+            const position = elementView.model.getBBox()
+
+            if (
+                elementDragStartPosition.x !== position.x ||
+                elementDragStartPosition.y !== position.y
+            ) {
+                graphEventHook.trigger({
+                    x: position.x,
+                    y: position.y,
+                    id: elementView.model.id,
+                    type: 'element-move',
+                })
+            }
+        })
         paper.on('element:pointerup', (elementView) => {
-            if (!elementDragStartPosition)
-                throw new Error('Element drag start position not set')
+            if (!elementDragStartPosition) return
 
             const position = elementView.model.getBBox()
             listenChange = true
@@ -256,7 +298,7 @@ export default function useEditor(methodId: string) {
                 elementDragStartPosition.x === position.x &&
                 elementDragStartPosition.y === position.y
             ) {
-                console.log('Element not moved')
+                console.log('Element not moved', elementView.model.id)
                 if (highlightElement) {
                     if (highlightElement.model.id === elementView.model.id) {
                         console.log('Element already selected, deselecting')
@@ -276,14 +318,6 @@ export default function useEditor(methodId: string) {
                 }
             } else {
                 console.log('Element moved', position)
-                // undoStack.push({
-                //     type: 'elementMove',
-                //     id: elementView.model.id,
-                //     x: position.x,
-                //     y: position.y,
-                //     dx: position.x - elementDragStartPosition.x,
-                //     dy: position.y - elementDragStartPosition.y,
-                // })
             }
             useRepo(Block).save({
                 id: elementView.model.id,
@@ -420,7 +454,15 @@ export default function useEditor(methodId: string) {
                         target.id,
                         source.port,
                         target.port
-                    )
+                    ).then((res) => {
+                        graphEventHook.trigger({
+                            x: target.x,
+                            y: target.y,
+                            id: res.id,
+                            type: 'link',
+                            options: res,
+                        })
+                    })
                 }
             }
         })
@@ -431,7 +473,14 @@ export default function useEditor(methodId: string) {
             if (silentRemove) return
 
             if (cell.isElement()) {
-                void Block.destroy(cell.id)
+                void Block.destroy(cell.id).then(() => {
+                    graphEventHook.trigger({
+                        x: 0,
+                        y: 0,
+                        id: cell.id,
+                        type: 'block:delete',
+                    })
+                })
             }
 
             if (cell.isLink()) {
@@ -460,14 +509,18 @@ export default function useEditor(methodId: string) {
 
                 const targetPort = portRepo.value.find(target.port as string)
                 if (targetPort && sourcePort) {
-                    Connection.destroy(
-                        useRepo(Connection)
-                            .where('from_method_block_id', source.id)
-                            .where('to_method_block_id', target.id)
-                            .where('from_port_id', source.port)
-                            .where('to_port_id', target.port)
-                            .first()?.id as string
-                    )
+                    const connectionId = useRepo(Connection)
+                        .where('from_method_block_id', source.id)
+                        .where('to_method_block_id', target.id)
+                        .where('from_port_id', source.port)
+                        .where('to_port_id', target.port)
+                        .first()?.id as string
+                    Connection.destroy(connectionId).then((res) => {
+                        graphEventHook.trigger({
+                            id: connectionId,
+                            type: 'link:delete',
+                        })
+                    })
                 }
             }
         })
@@ -480,14 +533,30 @@ export default function useEditor(methodId: string) {
         showFitButton,
         method,
         blocks,
+        mouseMoveHook,
+        graphEventHook,
+        paperOffset,
         createPaper() {
             return new joint.dia.Paper({
                 el: document.getElementById('container'),
                 model: graph,
                 async: true,
-                interactive: {
-                    labelMove: false,
-                    linkMove: false,
+                // interactive: {
+                //     labelMove: false,
+                //     linkMove: false,
+                // },
+                interactive(cellView, event) {
+                    console.log(cellView?.model?.prop('type'))
+                    if (
+                        ['cursor', 'standard.DoubleLink'].includes(
+                            cellView?.model?.prop('type')
+                        )
+                    ) {
+                        return false
+                    }
+                    // if this is a link label
+                    console.log(cellView)
+                    return true
                 },
 
                 // set paper dimensions
@@ -582,6 +651,15 @@ export default function useEditor(methodId: string) {
         },
         handleMouseMove(e: MouseEvent, paper: dia.Paper) {
             localMousePosition = { x: e.offsetX, y: e.offsetY }
+            const relativePosition = offsetToLocalPoint(
+                e.offsetX,
+                e.offsetY,
+                paper
+            )
+            void mouseMoveHook.trigger({
+                x: relativePosition.x,
+                y: relativePosition.y,
+            })
             if (dragStartPosition) {
                 const dx = e.offsetX - dragStartPosition.x
                 const dy = e.offsetY - dragStartPosition.y
@@ -644,12 +722,114 @@ export default function useEditor(methodId: string) {
             }
         },
         closePopup,
+        addCursor(
+            id: string,
+            label: string,
+            message: string,
+            color: string,
+            x: number,
+            y: number
+        ) {
+            // cell with svg icon and text label
+            let sh
+            if (graph.getCell('cursor-' + id)) {
+                sh = graph.getCell('cursor-' + id)
+                // animate position change
+                sh.transition(
+                    'position',
+                    {
+                        x: x,
+                        y: y,
+                    },
+                    {
+                        delay: 0,
+                        duration: 200,
+                        valueFunction: joint.util.interpolate.object,
+                    }
+                )
+            } else {
+                sh = cursorShape.clone()
+                sh.prop('id', 'cursor-' + id)
+                graph.addCell(sh)
+                sh.position(x, y)
+            }
+            sh.toFront()
+            sh.prop('type', 'cursor')
+            sh.attr('label/text', label)
+            const textColor =
+                chroma(color).luminance() > 0.5 ? 'black' : 'white'
+            sh.attr('label/fill', textColor)
+            sh.attr('message-text/text', message)
+            sh.attr('message-text/fill', textColor)
+            sh.attr('cursor/stroke', color)
+            sh.attr('body/fill', color)
+            sh.attr('message-rect/fill', color)
+            sh.attr('body/ref-width', label.length * 7)
+
+            if (message?.length) {
+                sh.attr('message-text/text', message)
+                const lineCount = Math.ceil(message.length / 21)
+                sh.attr('message-rect/height', 12 * lineCount + 8)
+            } else {
+                sh.attr('message-text/text', '')
+                sh.attr('message-rect/height', 0)
+            }
+        },
+        handleEvent(event: Position & { id: string; type: string; options: any }) {
+            console.log('Event received',event)
+            switch (event.type) {
+                case 'element-move':
+                    graph.getCell(event.id)?.transition(
+                        'position',
+                        {
+                            x: event.x,
+                            y: event.y,
+                        },
+                        {
+                            delay: 0,
+                            duration: 200,
+                            valueFunction: joint.util.interpolate.object,
+                        }
+                    )
+                    break
+                case 'link':
+                    useRepo(Connection).save(event.options)
+                    // console.log(connection)
+                    // renderLinks([connection])
+                    break
+                case 'link:delete':
+                    listenChange = false
+                    clearLinks([
+                        useRepo(Connection).find(event.id) as Connection,
+                    ])
+                    listenChange = true
+                    break;
+                case 'block':
+                    console.log(event)
+                    useRepo(Block).save(event.options)
+                case 'block:delete':
+                    silentRemove = true
+                    graph.getCell(event.id)?.remove()
+                    silentRemove = false
+                    // listenChange = false
+                    // listenChange = true
+                    break
+            }
+        },
         addTemplateBlock(paper: dia.Paper, block: Block) {
             const connectionType = blocksPopupType.value
             const link = graph.getLinks().find((link) => !link.target().id)
             if (!link) {
                 const { x, y } = blocksPopupPosition.value as Position
-                Method.addBlock(methodId, block.id, x, y)
+                Method.addBlock(methodId, block.id, x, y).then(res=> {
+                    void graphEventHook.trigger({
+                        x: 0,
+                        y: 0,
+                        id: res.id,
+                        type: 'block',
+                        options: res,
+                    })
+                })
                 closePopup()
                 return
             }
@@ -662,6 +842,13 @@ export default function useEditor(methodId: string) {
             const sourceDirection = portRepo.value.find(sourcePortId)?.direction
 
             Method.addBlock(methodId, block.id, x, y).then((res) => {
+                void graphEventHook.trigger({
+                    x: 0,
+                    y: 0,
+                    id: res.id,
+                    type: 'block',
+                    options: res,
+                })
                 let targetBlockId = res.id
                 const possiblePorts = block.ports.filter(
                     (p) =>
@@ -673,13 +860,24 @@ export default function useEditor(methodId: string) {
                             : 'in')
                 )
                 let targetPortId = null
-                if (connectionType === 'any') targetPortId = possiblePorts[0].id
+                console.log(connectionType)
+                if (connectionType === 'flow') {
+                    targetPortId = possiblePorts.find(
+                        (p) => p.type === connectionType
+                    )?.id
+                }
+                else if (connectionType === 'any') targetPortId = possiblePorts.filter(p=>p.type !== 'flow')[0].id
                 else {
-                    const port = possiblePorts.find(
+                    const sameTypePort = possiblePorts.find(
                         (p) => p.type === connectionType
                     )
-                    if (port) targetPortId = port.id
-                    else targetPortId = possiblePorts[0].id
+                    if (sameTypePort) targetPortId = sameTypePort.id
+                    else {
+                        const anyPort = possiblePorts.find(
+                            (p) => p.type === 'any'
+                        )
+                        if (anyPort) targetPortId = anyPort.id
+                    }
                 }
                 if (!targetPortId) return
                 if (
@@ -701,7 +899,15 @@ export default function useEditor(methodId: string) {
                     targetBlockId,
                     sourcePortId,
                     targetPortId
-                )
+                ).then(res=>{
+                    graphEventHook.trigger({
+                        x: 0,
+                        y: 0,
+                        id: res.id,
+                        type: 'link',
+                        options: res,
+                    })
+                })
             })
         },
     }

@@ -30,6 +30,8 @@ class BlockService
             'type' => $data['type'] ?? 'method',
             'author_id' => $data['author_id'] ?? null,
             'category' => $data['category'] ?? null,
+            'http_method' => (isset($data['type']) && $data['type'] === 'endpoint') ? ($data['http_method'] ?? 'GET') : null,
+            'uri' => (isset($data['type']) && $data['type'] === 'endpoint') ? ($data['uri'] ?? '/') : null,
         ]);
 
         if (isset($data['ports'])) {

@@ -4,13 +4,11 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProjectBlockRequest;
-use App\Http\Resources\BlockResource;
 use App\Http\Resources\MethodResource;
 use App\Http\Resources\ProjectBlockResource;
 use App\Models\Block;
 use App\Models\Method;
 use App\Models\Project;
-use App\Models\ProjectBlock;
 use App\Services\BlockService;
 use App\Services\MethodService;
 use Illuminate\Http\Request;
@@ -79,11 +77,11 @@ class ProjectMethodController extends Controller
 
     public function execute(Request $request, Project $project, Block $block)
     {
-        return $this->methodService->execute($block, $request->all());
+        return $this->methodService->execute($project, $block, $request->all());
     }
 
     public function debug(Request $request, Project $project, Block $block)
     {
-        return $this->methodService->debug($block, $request->all());
+        return $this->methodService->debug($project, $block, $request->all());
     }
 }
