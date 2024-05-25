@@ -503,7 +503,7 @@ onMounted(() => {
     })
 })
 </script>
-<style>
+<style scoped>
 #container {
     border: 1px solid #000;
     user-select: none;
