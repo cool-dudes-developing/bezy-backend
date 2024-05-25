@@ -71,7 +71,7 @@ const EmptyStateClass = ref('flex flex-col justify-center items-center gap-2.5 p
 const NormalStateClass = ref('flex flex-col gap-2.5 py-5 px-2.5')
 </script>
 
-<style>
+<style scoped>
 th,
 td {
   text-align: left;

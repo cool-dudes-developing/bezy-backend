@@ -82,7 +82,7 @@ onMounted(() => {
 })
 </script>
 
-<style>
+<style scoped>
 .hub-container {
     overflow-x: scroll;
 }

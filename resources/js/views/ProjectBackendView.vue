@@ -96,7 +96,7 @@ Project.fetch(route.value.params.project as string)
     .finally(() => pageSpinner?.hide())
 </script>
 
-<style>
+<style scoped>
 th,
 td {
     text-align: left;

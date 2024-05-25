@@ -67,7 +67,7 @@ function destroy(id: string) {
 }
 </script>
 
-<style>
+<style scoped>
 th,
 td {
     text-align: left;
