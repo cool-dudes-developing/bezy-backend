@@ -161,11 +161,13 @@ class MethodService
      * @param array $data
      * @return array
      */
-    public function execute(Project $project, Block $block, array $data, string $run_id = null)
+    public function execute(Project $project, Block $block, array $data, string $run_id = null, array $recursions = [])
     {
         $this->project = $project;
 
         $this->startTime = microtime(true);
+
+        $this->recursions = $recursions;
 
         if (!$run_id) {
             $this->runId = uniqid();
@@ -299,7 +301,8 @@ class MethodService
                 $this->project,
                 $methodBlock->block,
                 $parameters,
-                $this->runId
+                $this->runId,
+                $this->recursions
             );
             $this->logStack($methodBlock, [
                 'parameters' => $parameters,
