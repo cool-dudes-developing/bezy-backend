@@ -168,7 +168,7 @@ class MethodService
         $this->startTime = microtime(true);
 
         if (!$run_id) {
-            $run_id = uniqid();
+            $this->runId = uniqid();
         }
 
         // hydrate cache with input data
