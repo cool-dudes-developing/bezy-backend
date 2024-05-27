@@ -1,10 +1,16 @@
 <template>
     <div v-if="project">
         <div class="flex flex-col gap-20 p-10 lg:grid-cols-2 lg:gap-10 xl:grid">
-            <v-card @create="router.push({ name: 'endpointCreate' })">
+            <v-card
+                :disable-create="project?.role === 'viewer'"
+                @create="router.push({ name: 'endpointCreate' })"
+            >
                 <template #title>Endpoints</template>
                 <template #subtitle>Your APIs public interface.</template>
-                <items-list :items="project.endpoints">
+                <items-list
+                    :delete-enabled="project?.role !== 'viewer'"
+                    :items="project.endpoints"
+                >
                     <template #item="{ item }">
                         <router-link
                             :to="{
@@ -28,10 +34,14 @@
                     </template>
                 </items-list>
             </v-card>
-            <v-card @create="router.push({ name: 'methodCreate' })">
+            <v-card
+                :disable-create="project?.role === 'viewer'"
+                @create="router.push({ name: 'methodCreate' })"
+            >
                 <template #title>Methods</template>
                 <template #subtitle>Building blocks of your API.</template>
                 <items-list
+                    :delete-enabled="project?.role !== 'viewer'"
                     :items="project.methods.filter((e) => e.type === 'method')"
                     @delete="Method.destroy(project.id, $event.id)"
                 >

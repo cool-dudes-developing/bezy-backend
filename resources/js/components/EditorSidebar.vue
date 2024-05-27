@@ -4,7 +4,7 @@
             <router-link
                 :to="{
                     name: 'projectBackend',
-                    params: { project },
+                    params: { project: projectId },
                 }"
             >
                 <svg-icon
@@ -18,9 +18,10 @@
                 {{ isEndpoint ? 'Endpoints' : 'Methods' }}
             </h3>
             <router-link
+                v-if="project?.role !== 'viewer'"
                 :to="{
                     name: isEndpoint ? 'endpointCreate' : 'methodCreate',
-                    params: { project },
+                    params: { project: projectId },
                 }"
                 class="ml-auto"
             >
@@ -31,15 +32,16 @@
             </router-link>
         </div>
         <items-list
+            :delete-enabled="project?.role !== 'viewer'"
             :items="methods"
             :selected="methodId"
             pointer
-            @delete="Method.destroy(project, $event.id)"
+            @delete="Method.destroy(projectId, $event.id)"
             @select="
                 router.push({
                     name: isEndpoint ? 'endpoint' : 'method',
                     params: {
-                        project,
+                        project: projectId,
                         [isEndpoint ? 'endpoint' : 'method']: $event.id,
                     },
                 })
@@ -49,7 +51,7 @@
                 <edit-text-input
                     v-model="item.title"
                     @save="
-                        Method.update(project, item.id, {
+                        Method.update(projectId, item.id, {
                             title: $event,
                         })
                     "
@@ -67,25 +69,26 @@ import SvgIcon from '@/components/SvgIcon.vue'
 import Method from '@/models/Method'
 import EditTextInput from '@/components/EditTextInput.vue'
 import ItemsList from '@/components/ItemsList.vue'
-
-const methods = computed(() => {
-    return useRepo(Method)
-        .query()
-        .where('type', isEndpoint.value ? 'endpoint' : 'method')
-        .where('project_id', project.value)
-        .get()
-})
+import Project from '@/models/Project'
 
 const route = useRoute()
 const router = useRouter()
 const isEndpoint = computed(() => route.name?.toString().includes('endpoint'))
-const project = computed(() => route.params.project as string)
+const projectId = computed(() => route.params.project as string)
+const project = computed(() => useRepo(Project).find(projectId.value))
 const methodId = computed(
     () =>
         (isEndpoint.value
             ? route.params.endpoint
             : route.params.method) as string
 )
+const methods = computed(() => {
+    return useRepo(Method)
+        .query()
+        .where('type', isEndpoint.value ? 'endpoint' : 'method')
+        .where('project_id', projectId.value)
+        .get()
+})
 
 onMounted(() => {
     if (!methods.value.length) {

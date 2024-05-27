@@ -32,13 +32,30 @@
                     <button
                         v-if="block?.type === 'method'"
                         @click="
-                            router.push({
-                                name: 'method',
-                                params: {
-                                    project: props.method?.project_id as string,
-                                    method: props.method.id as string,
-                                },
-                            })
+                            () => {
+                                if (
+                                    props.block?.project_id ===
+                                    props.method?.project_id
+                                ) {
+                                    console.log(props.block)
+                                    router.push({
+                                        name: 'method',
+                                        params: {
+                                            project: props.method?.project_id,
+                                            method: props.block?.block_id,
+                                        },
+                                    })
+                                } else {
+                                    router.push({
+                                        name: 'blockPreview',
+                                        params: {
+                                            block: props.block
+                                                ?.block_id as string,
+                                        },
+                                    })
+                                }
+                                emit('close')
+                            }
                         "
                     >
                         <svg-icon
@@ -47,31 +64,6 @@
                         />
                     </button>
                 </div>
-                <button
-                    v-if="
-                        templateAssets.find(
-                            (a) => a.block.id === block?.block_id
-                        )
-                    "
-                    class="rounded bg-accent px-3 font-bold text-black"
-                    @click="
-                        () => {
-                            const asset = templateAssets.find(
-                                (a) => a.block.id === block?.block_id
-                            )
-                            if (!asset) return
-                            // router.push({
-                            //     name: 'method',
-                            //     params: {
-                            //         project: route.params.project as string,
-                            //         method: asset.block.id as string,
-                            //     },
-                            // })
-                        }
-                    "
-                >
-                    Inspect
-                </button>
             </div>
             <p>
                 {{ block.description }}
@@ -88,7 +80,12 @@
                 />
                 <button
                     class="rounded-xl bg-petronas px-3 py-1 text-dark"
-                    @click="Block.save(block)"
+                    @click="
+                        () => {
+                            Block.save(block)
+                            emit('constantChanged')
+                        }
+                    "
                 >
                     Set
                 </button>
@@ -239,6 +236,7 @@ import Block from '@/models/Block'
 import { useRouter } from 'vue-router'
 import { method } from 'lodash'
 
+const emit = defineEmits(['close', 'constantChanged'])
 const router = useRouter()
 const assetRepo = computed(() => useRepo(MarketplaceAsset))
 const templateAssets = computed(() => assetRepo.value.all())
@@ -262,8 +260,14 @@ function addPort() {
         newPortName.value,
         newPortType.value,
         props.block.name !== 'start'
-    ).then((block) => {
+    ).then((port) => {
+        console.log(port)
         // graph.addCell(blocks.value.find((b) => b.id === block.id)?.buildingShape)
+        if (props.block) {
+            if (props.block.name === 'start')
+                props.block.outPorts.push(port)
+            else props.block.inPorts.push(port)
+        }
     })
 }
 </script>

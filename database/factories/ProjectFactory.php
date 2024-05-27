@@ -16,7 +16,6 @@ class ProjectFactory extends Factory
             'name' => $this->faker->name(),
             'description' => $this->faker->text(),
             'slug' => $this->faker->slug(),
-            'user_id' => User::factory(),
         ];
     }
 }

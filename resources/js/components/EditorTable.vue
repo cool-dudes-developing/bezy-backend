@@ -42,6 +42,7 @@
                                     edit.rowId === index &&
                                     edit.columnId === column.id
                                 "
+                                :is-editable="isEditable"
                                 :is-structure="isStructure"
                                 :type="isStructure ? column.id : 'text'"
                                 @blur="onCellBlur(index, column.id)"
@@ -61,12 +62,14 @@
         >
             <slot name="footer" />
             <button
+                v-if="isEditable"
                 class="rounded-lg bg-gray-600 px-2 py-1"
                 @click="addRow"
             >
                 + {{ isStructure ? 'Column' : 'Row' }}
             </button>
             <button
+                v-if="isEditable"
                 class="rounded-lg bg-gray-600 px-2 py-1"
                 @click="
                     emit('save', {
@@ -107,6 +110,10 @@ const props = defineProps({
     isStructure: {
         type: Boolean,
         default: false,
+    },
+    isEditable: {
+        type: Boolean,
+        default: true,
     },
 })
 
@@ -197,6 +204,7 @@ function getCellState(rowId: string, columnId: string) {
 }
 
 function editRecord(rowId: string, columnId: string) {
+    if (!props.isEditable) return
     edit.value.rowId = rowId
     edit.value.columnId = columnId
     requestAnimationFrame(() => {

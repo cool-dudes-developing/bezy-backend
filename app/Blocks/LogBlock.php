@@ -8,8 +8,7 @@ class LogBlock extends GenericBlock implements BlockInterface
 
     public function run() : array
     {
-        logger()->info($this->Message);
-        $this->service->output($this->Message);
+        $this->service->log($this->parameters['Message']);
         return [];
     }
 }

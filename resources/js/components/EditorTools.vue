@@ -8,9 +8,9 @@
 <!--        <button @click="emit('redo')">-->
 <!--            <svg-icon name="redo" />-->
 <!--        </button>-->
-        <button @click="emit('save')">
-            <svg-icon name="save" />
-        </button>
+<!--        <button @click="emit('save')">-->
+<!--            <svg-icon name="save" />-->
+<!--        </button>-->
         <button v-if="!disablePublish" @click="emit('publish')">
             <svg-icon name="upload" />
         </button>

@@ -19,6 +19,7 @@ class MethodService
     private array $stack = [];
     private array $recursions = [];
     private array $output = [];
+    private array $logs = [];
     private float $startTime;
     private Project $project;
     private string $runId = 'hello';
@@ -26,6 +27,16 @@ class MethodService
     public function getProject(): Project
     {
         return $this->project;
+    }
+
+    public function getRunId(): string
+    {
+        return $this->runId;
+    }
+
+    public function log(mixed $msg)
+    {
+        $this->logs[] = $msg;
     }
 
     private function buildFlowTree(MethodBlock $methodBlock, Collection $flows, Collection $params): array
@@ -151,7 +162,8 @@ class MethodService
         return response()->json([
             'result' => $result,
             'cache' => $this->cleanCache(),
-            'stack' => $this->cleanStack()
+            'stack' => $this->cleanStack(),
+            'logs' => $this->logs,
         ], $status);
     }
 

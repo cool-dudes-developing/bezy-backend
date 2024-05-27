@@ -2519,53 +2519,6 @@ return [
                     ],
                 ]
             ],
-            'datetime_add' => [
-                'name' => 'datetime_add',
-                'title' => 'Datetime Add',
-                'description' => 'Add interval to DateTime object',
-                'type' => 'datetime',
-                'ports' => [
-                    [
-                        'name' => 'Datetime',
-                        'type' => 'datetime',
-                        'direction' => 0,
-                    ],
-                    [
-                        'name' => 'Interval',
-                        'type' => 'string',
-                        'direction' => 0,
-                    ],
-                    [
-                        'name' => 'Result',
-                        'type' => 'datetime',
-                        'direction' => 1,
-                    ],
-                ]
-            ],
-            'datetime_diff' => [
-                'name' => 'datetime_diff',
-                'title' => 'Datetime Diff',
-                'description' => 'Return difference between two DateTime objects',
-                'type' => 'datetime',
-                'ports' => [
-                    [
-                        'name' => 'Datetime 1',
-                        'type' => 'datetime',
-                        'direction' => 0,
-                    ],
-                    [
-                        'name' => 'Datetime 2',
-                        'type' => 'datetime',
-                        'direction' => 0,
-                        'default' => 'now'
-                    ],
-                    [
-                        'name' => 'Result',
-                        'type' => 'string',
-                        'direction' => 1,
-                    ],
-                ]
-            ],
         ],
         'cryptography' => [
             'md5' => [

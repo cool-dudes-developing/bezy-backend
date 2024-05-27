@@ -16,6 +16,7 @@
     <template v-else>
         <select
             v-if="type === 'type'"
+            :disabled="!isEditable"
             :value="modelValue"
             class="w-full bg-transparent"
             @change="emit('update:modelValue', $event.target!.value)"
@@ -32,6 +33,7 @@
             :value="!!modelValue"
             class="w-full bg-transparent"
             @change="emit('update:modelValue', !!$event.target!.value)"
+            :disabled="!isEditable"
         >
             <option disabled>NULL</option>
             <option value="true">Yes</option>
@@ -51,8 +53,8 @@
                 modelValue === null
                     ? 'NULL'
                     : modelValue === undefined || modelValue === ''
-                      ? 'Empty'
-                      : modelValue
+                        ? 'Empty'
+                        : modelValue
             }}
         </span>
     </template>
@@ -83,6 +85,10 @@ const props = defineProps({
     type: {
         type: String,
         default: 'text',
+    },
+    isEditable: {
+        type: Boolean,
+        default: true,
     },
 })
 </script>

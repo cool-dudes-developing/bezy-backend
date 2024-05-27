@@ -22,6 +22,8 @@ class MethodBlockResource extends JsonResource
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 
+            'project_id' => $this->block->projects()?->first()?->id,
+
             $this->merge(new BlockResource($this->block)),
 
             // ports dictionary

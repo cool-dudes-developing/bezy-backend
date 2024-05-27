@@ -18,7 +18,9 @@ class ProjectTest extends TestCase
     public function test_can_get_projects()
     {
         $user = User::factory()->create();
-        Project::factory()->count(5)->create(['user_id' => $user->id]);
+        Project::factory()->count(5)->create()->each(function ($project) use ($user) {
+            $project->members()->attach($user->id, ['role' => 'owner']);
+        });
         Project::factory()->count(5)->create();
         $response = $this->actingAs($user, 'api')
             ->getJson(route('projects.index'));
@@ -46,8 +48,9 @@ class ProjectTest extends TestCase
      */
     public function test_can_get_project()
     {
-        $user = User::factory()->create();
-        $project = Project::factory()->create(['user_id' => $user->id]);
+        $project = Project::factory()->create();
+        $project->members()->attach(User::factory()->create()->id, ['role' => 'owner']);
+        $user = $project->members->first();
         $response = $this->actingAs($user, 'api')
             ->getJson(route('projects.show', $project));
         $response->assertStatus(200);
@@ -75,8 +78,9 @@ class ProjectTest extends TestCase
      */
     public function test_can_get_project_by_slug()
     {
-        $user = User::factory()->create();
-        $project = Project::factory()->create(['user_id' => $user->id]);
+        $project = Project::factory()->create();
+        $project->members()->attach(User::factory()->create()->id, ['role' => 'owner']);
+        $user = $project->members->first();
         $response = $this->actingAs($user, 'api')
             ->getJson(route('projects.show', $project->slug));
         $response->assertStatus(200);
@@ -159,7 +163,8 @@ class ProjectTest extends TestCase
     public function test_can_update_project()
     {
         $project = Project::factory()->create();
-        $response = $this->actingAs($project->user, 'api')
+        $project->members()->attach(User::factory()->create()->id, ['role' => 'owner']);
+        $response = $this->actingAs($project->members->first(), 'api')
             ->putJson(route('projects.update', $project), Project::factory()->make()->toArray());
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -187,7 +192,8 @@ class ProjectTest extends TestCase
     public function test_can_update_project_with_same_slug()
     {
         $project = Project::factory()->create();
-        $response = $this->actingAs($project->user, 'api')
+        $project->members()->attach(User::factory()->create()->id, ['role' => 'owner']);
+        $response = $this->actingAs($project->members->first(), 'api')
             ->putJson(route('projects.update', $project), [
                 'name' => $project->name,
                 'description' => $project->description,
@@ -219,7 +225,8 @@ class ProjectTest extends TestCase
     public function test_can_delete_project()
     {
         $project = Project::factory()->create();
-        $response = $this->actingAs($project->user, 'api')
+        $project->members()->attach(User::factory()->create()->id, ['role' => 'owner']);
+        $response = $this->actingAs($project->members->first(), 'api')
             ->deleteJson(route('projects.destroy', $project));
         $response->assertStatus(200);
         $response->assertJsonStructure([

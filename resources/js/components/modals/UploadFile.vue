@@ -22,6 +22,7 @@
                         ref="fileInput"
                         hidden
                         type="file"
+                        @change="files = $event.target.files"
                     />
                     <div
                         :class="{

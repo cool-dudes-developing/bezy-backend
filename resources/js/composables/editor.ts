@@ -47,6 +47,7 @@ export default function useEditor(methodId: string) {
     const showFitButton = ref(false)
     let silentRemove = false
     let listenChange = true
+    let editable = true
     const mouseMoveHook = createEventHook<Position>()
     const graphEventHook = createEventHook<
         Position & { id: string; type: string; options: any }
@@ -169,6 +170,7 @@ export default function useEditor(methodId: string) {
                         }
                     })
                 }
+                console.log(oldBlock.constant,block.constant)
                 if (oldBlock.constant !== block.constant) {
                     console.log('Block constant changed')
                     renderBlock(block)
@@ -192,6 +194,9 @@ export default function useEditor(methodId: string) {
                     renderLinks(block.outboundConnections)
                 }
             })
+        },
+        {
+            deep: true,
         }
     )
 
@@ -207,6 +212,7 @@ export default function useEditor(methodId: string) {
 
     function registerCursorEvents(paper: dia.Paper) {
         paper.on('blank:pointerdblclick', function (event) {
+            if (!editable) return
             if (blocksPopupOpen.value) {
                 closePopup()
             } else {
@@ -245,12 +251,14 @@ export default function useEditor(methodId: string) {
 
     function registerLinkToolEvents(paper: dia.Paper) {
         paper.on('link:mouseenter', (linkView: dia.LinkView) => {
+            if (!editable) return
             // only if link is connected
             if (!linkView.model.source().id || !linkView.model.target().id)
                 return
             linkView.addTools(editorLinkTools)
         })
         paper.on('link:mouseleave', (linkView: dia.LinkView) => {
+            if (!editable) return
             linkView.removeTools()
         })
     }
@@ -290,10 +298,10 @@ export default function useEditor(methodId: string) {
         })
         paper.on('element:pointerup', (elementView) => {
             if (!elementDragStartPosition) return
+            if (!editable) return
 
             const position = elementView.model.getBBox()
             listenChange = true
-
             if (
                 elementDragStartPosition.x === position.x &&
                 elementDragStartPosition.y === position.y
@@ -318,6 +326,12 @@ export default function useEditor(methodId: string) {
                 }
             } else {
                 console.log('Element moved', position)
+                Block.save({
+                    id: elementView.model.id,
+                    x: position.x,
+                    y: position.y,
+                })
+
             }
             useRepo(Block).save({
                 id: elementView.model.id,
@@ -339,6 +353,7 @@ export default function useEditor(methodId: string) {
         paper.on(
             'element:magnet:pointerdblclick',
             (magnetView, evt, magnetNode, x, y) => {
+                if (!editable) return
                 evt.stopPropagation()
                 // show modal popup to add and connect block
                 const blockId = magnetView.model.id
@@ -378,11 +393,13 @@ export default function useEditor(methodId: string) {
                     method: method.value,
                 },
                 {
+                    onConstantChanged: () => {
+                        renderBlock(block)
+                    },
                     onClose: () => {
                         console.log('Block details closed')
-                        listenChange = false
-                        renderBlock(block)
-                        listenChange = true
+                        // listenChange = false
+                        // listenChange = true
                     },
                 }
             )
@@ -536,7 +553,8 @@ export default function useEditor(methodId: string) {
         mouseMoveHook,
         graphEventHook,
         paperOffset,
-        createPaper() {
+        createPaper(canEdit:boolean = true) {
+            editable = canEdit
             return new joint.dia.Paper({
                 el: document.getElementById('container'),
                 model: graph,
@@ -546,7 +564,7 @@ export default function useEditor(methodId: string) {
                 //     linkMove: false,
                 // },
                 interactive(cellView, event) {
-                    console.log(cellView?.model?.prop('type'))
+                    if (!editable) return false
                     if (
                         ['cursor', 'standard.DoubleLink'].includes(
                             cellView?.model?.prop('type')
@@ -554,8 +572,6 @@ export default function useEditor(methodId: string) {
                     ) {
                         return false
                     }
-                    // if this is a link label
-                    console.log(cellView)
                     return true
                 },
 
@@ -768,7 +784,7 @@ export default function useEditor(methodId: string) {
 
             if (message?.length) {
                 sh.attr('message-text/text', message)
-                const lineCount = Math.ceil(message.length / 21)
+                const lineCount = Math.ceil(message.length / 20)
                 sh.attr('message-rect/height', 12 * lineCount + 8)
             } else {
                 sh.attr('message-text/text', '')

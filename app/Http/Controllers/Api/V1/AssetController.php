@@ -11,7 +11,9 @@ class AssetController extends Controller
     public function index()
     {
         return $this->respondWithSuccess('Assets retrieved',
-            AssetResource::collection(PublishedAsset::with(['author'])->get())
+            AssetResource::collection(PublishedAsset::with(['author'])->get()->sortByDesc(function ($asset) {
+                return $asset->usersLiked->count();
+            }))
         );
     }
 

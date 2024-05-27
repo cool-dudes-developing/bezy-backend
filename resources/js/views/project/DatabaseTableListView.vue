@@ -1,9 +1,10 @@
 <template>
     <div class="flex flex-col gap-10 p-10">
-        <v-card>
+        <v-card disable-create>
             <template #title>Tables</template>
             <template #subtitle>Database tables for this project.</template>
             <items-list
+                :delete-enabled="project?.role !== 'viewer'"
                 :items="tables"
                 @delete="
                     DatabaseTable.destroy(
@@ -37,13 +38,13 @@
                 </template>
             </items-list>
             <div
-                class="flex w-1/2 flex-col items-start gap-1 rounded-lg bg-dark p-1 px-3 py-2"
+                class="flex max-w-md flex-col items-start gap-1 rounded-lg bg-dark p-1 px-3 py-2"
             >
                 <h3>Create new table</h3>
-                <div class="flex w-full items-center gap-3">
+                <div class="flex flex-wrap w-full items-center gap-3">
                     <input
                         v-model="newTableName"
-                        class="grow rounded border border-petronas bg-transparent p-1 text-black text-white"
+                        class="grow rounded border border-petronas bg-transparent p-1 text-white"
                         placeholder="New table name"
                         type="text"
                     />
@@ -75,10 +76,14 @@ import { useRoute } from 'vue-router'
 import { useRepo } from 'pinia-orm'
 import VCard from '@/components/VCard.vue'
 import ItemsList from '@/components/ItemsList.vue'
+import Project from '@/models/Project'
 
 const route = computed(() => useRoute())
 
 const tables = computed(() => useRepo(DatabaseTable).all())
+const project = computed(() =>
+    useRepo(Project).find(route.value.params.project as string) as Project
+)
 
 const newTableName = ref('')
 

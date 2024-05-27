@@ -10,6 +10,7 @@ export default class Method extends Model {
 
     @Uid() declare id: string
     @Attr('') declare project_id: string
+    @Attr(false) declare can_edit: boolean
     @Str('') declare name: string
     @Str('') declare title: string
     @Str('') declare description: string
@@ -111,6 +112,8 @@ export default class Method extends Model {
                     (block) => block.type === (direction ? 'end' : 'start')
                 )
                 innerBlock.addPort(response.data.data)
+
+                return response.data.data
             })
     }
 

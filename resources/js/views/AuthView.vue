@@ -17,29 +17,31 @@
             <div
                 class="h-auto w-11/12 max-w-[320px] rounded-3xl bg-dark bg-opacity-75 p-[1.25rem] drop-shadow-lg backdrop-blur-xl"
             >
-                <router-view v-slot="{ Component }">
-                    <transition
-                        mode="out-in"
-                        name="slide"
-                    >
-                        <spinner-loader
-                            v-if="spinner?.visible.value"
-                            class="absolute inset-0"
-                        />
-                    </transition>
-                    <transition
-                        mode="out-in"
-                        name="slide"
-                    >
-                        <component
-                            :is="Component"
-                            :class="{
-                                'opacity-0': spinner?.visible.value,
-                            }"
-                            class="transform-gpu duration-100"
-                        />
-                    </transition>
-                </router-view>
+                <slot>
+                    <router-view v-slot="{ Component }">
+                        <transition
+                            mode="out-in"
+                            name="slide"
+                        >
+                            <spinner-loader
+                                v-if="spinner?.visible.value"
+                                class="absolute inset-0"
+                            />
+                        </transition>
+                        <transition
+                            mode="out-in"
+                            name="slide"
+                        >
+                            <component
+                                :is="Component"
+                                :class="{
+                                    'opacity-0': spinner?.visible.value,
+                                }"
+                                class="transform-gpu duration-100"
+                            />
+                        </transition>
+                    </router-view>
+                </slot>
             </div>
             <p class="font-footer font-bold text-light">
                 Made with ♥️ by

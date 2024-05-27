@@ -16,11 +16,16 @@ class MethodResource extends JsonResource
             'title' => $this->title,
             'description' => $this->description,
             'type' => $this->type,
-            'project_id' => $this->whenPivotLoaded('project_blocks', fn() => $this->pivot->project_id),
+            'project_id' => $this->projects->first()->id,
             'http_method' => $this->http_method,
             'uri' => $this->uri,
             'in' => $this->ports->where('direction', false)->count(),
             'out' => $this->ports->where('direction', true)->count(),
+            'can_edit' => $this->projects()->whereHas(
+                'members',
+                fn($query) => $query->where('user_id', auth()->id())
+                    ->where('role', '!=', 'viewer')
+            )->exists(),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 

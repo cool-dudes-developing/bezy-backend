@@ -57,9 +57,9 @@ const assets = computed(() =>
         .where((item) => {
             if (search.value.trim() === '') return true
             const strings = [
-                ...item.name.toLowerCase().split(' '),
-                ...item.description.toLowerCase().split(' '),
-                ...item.caption.toLowerCase().split(' '),
+                ...item.name?.toLowerCase().split(' ') ?? [],
+                ...item.description?.toLowerCase().split(' ') ?? [],
+                ...item.caption?.toLowerCase().split(' ') ?? [],
             ].filter((string) => string !== '')
             const searchStrings = search.value.toLowerCase().split(' ')
             return (

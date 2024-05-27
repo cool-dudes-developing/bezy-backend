@@ -62,17 +62,17 @@ class BlockController extends Controller
                             'is_liked' => $asset->usersLiked->find(auth()->id()) !== null,
                             'block' => [
                                 'id' => $asset->block_id,
-                                'name' => $asset->name
+                                'name' => $asset->name,
+                                'ports' => $asset->block->ports->map(function ($port) {
+                                    return [
+                                        'id' => $port->id,
+                                        'name' => $port->name,
+                                        'type' => $port->type,
+                                        'direction' => $port->direction,
+                                        'default' => $port->default
+                                    ];
+                                })
                             ],
-                            'ports' => $asset->block->ports->map(function ($port) {
-                                return [
-                                    'id' => $port->id,
-                                    'name' => $port->name,
-                                    'type' => $port->type,
-                                    'direction' => $port->direction,
-                                    'default' => $port->default
-                                ];
-                            })
                         ];
                     })
             ]

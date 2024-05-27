@@ -142,7 +142,7 @@
                     This is the response data from the method execution.
                 </small>
                 <template v-if="loading">
-                    <spinner-loader/>
+                    <spinner-loader />
                 </template>
                 <template v-else-if="runner.response.status">
                     <div
@@ -156,83 +156,111 @@
                         {{ runner.response?.statusText }}
                     </div>
                     <h3 class="text-lg">Response data:</h3>
-                    <template v-if="runner.response.status < 400">
-                        <pre class="overflow-x-auto bg-dark">{{
-                            runner.response?.data['result']
-                        }}</pre>
-                        <h3 class="text-lg">Call Stack:</h3>
-                        <items-list
-                            :delete-enabled="false"
-                            :items="runner.response?.data['stack'] ?? []"
-                            @select="
-                                expandStack =
-                                    expandStack === $event.id ? null : $event.id
-                            "
+                    <pre class="overflow-x-auto bg-dark">{{
+                        runner.response?.data['result'] ?? runner.response?.data
+                    }}</pre>
+                    <ul class="grid grid-cols-3 divide-x divide-dark">
+                        <li
+                            v-for="tab in [
+                                {
+                                    key: 'stack',
+                                    label: 'Call Stack',
+                                },
+                                {
+                                    key: 'cache',
+                                    label: 'Cache',
+                                },
+                                {
+                                    key: 'logs',
+                                    label: 'Logs',
+                                },
+                            ]"
+                            :key="tab.key"
                         >
-                            <template #item="{ item }">
-                                <div class="flex w-full flex-col">
-                                    <div
-                                        class="grid w-full grid-cols-2 items-end"
-                                    >
-                                        <span>{{ item.block }}</span>
-                                        <small class="text-end">
-                                            {{ formatDuration(item.duration) }}
-                                        </small>
+                            <button
+                                :class="{
+                                    'bg-opacity-50': activeTab !== tab.key,
+                                }"
+                                class="w-full bg-petronas py-2 font-bold text-black"
+                                @click="activeTab = tab.key"
+                            >
+                                {{ tab.label }}
+                            </button>
+                        </li>
+                    </ul>
+                    <items-list
+                        v-if="activeTab === 'stack'"
+                        :delete-enabled="false"
+                        :items="runner.response?.data['stack'] ?? []"
+                        @select="
+                            expandStack =
+                                expandStack === $event.id ? null : $event.id
+                        "
+                    >
+                        <template #item="{ item }">
+                            <div class="flex w-full flex-col">
+                                <div class="grid w-full grid-cols-2 items-end">
+                                    <span>{{ item.block }}</span>
+                                    <small class="text-end">
+                                        {{ formatDuration(item.duration) }}
+                                    </small>
+                                </div>
+                                <div
+                                    v-if="
+                                        expandStack && expandStack === item.id
+                                    "
+                                    class="grid grid-cols-2"
+                                >
+                                    <div>
+                                        <h4 class="text-sm">Input:</h4>
+                                        <pre
+                                            class="overflow-x-auto border-l-2 border-petronas pl-1"
+                                            >{{ item.parameters }}</pre
+                                        >
                                     </div>
-                                    <div
-                                        v-if="
-                                            expandStack &&
-                                            expandStack === item.id
-                                        "
-                                        class="grid grid-cols-2"
-                                    >
-                                        <div>
-                                            <h4 class="text-sm">Input:</h4>
-                                            <pre
-                                                class="overflow-x-auto border-l-2 border-petronas pl-1"
-                                                >{{ item.parameters }}</pre
-                                            >
-                                        </div>
-                                        <div>
-                                            <h4 class="text-sm">Output:</h4>
-                                            <pre
-                                                class="overflow-x-auto border-l-2 border-petronas pl-1"
-                                                >{{ item.result }}</pre
-                                            >
-                                        </div>
+                                    <div>
+                                        <h4 class="text-sm">Output:</h4>
+                                        <pre
+                                            class="overflow-x-auto border-l-2 border-petronas pl-1"
+                                            >{{ item.result }}</pre
+                                        >
                                     </div>
                                 </div>
-                            </template>
-                        </items-list>
-                        <h3 class="text-lg">Cache:</h3>
-                        <items-list
-                            :delete-enabled="false"
-                            :items="
+                            </div>
+                        </template>
+                    </items-list>
+                    <items-list
+                        v-else-if="activeTab === 'cache'"
+                        :delete-enabled="false"
+                        :items="
                                 Object.values(
                                     runner.response?.data['cache'] ?? {}
                                 )
                             "
-                        >
-                            <template #item="{ item }">
-                                <div class="grid w-full grid-cols-3">
+                    >
+                        <template #item="{ item }">
+                            <div class="grid w-full grid-cols-3">
                                     <span>
                                         {{ item.from }} => {{ item.to }}
                                     </span>
-                                    <span class="text-center">
+                                <span class="text-center">
                                         {{ item.type }}
                                     </span>
-                                    <small class="text-end">
-                                        {{ item.value }}
-                                    </small>
-                                </div>
-                            </template>
-                        </items-list>
-                    </template>
-                    <pre
-                        v-else
-                        class="overflow-x-auto bg-dark"
-                        >{{ runner.response?.data }}</pre
+                                <small class="text-end">
+                                    {{ item.value }}
+                                </small>
+                            </div>
+                        </template>
+                    </items-list>
+                    <items-list
+                        v-else-if="activeTab === 'logs'"
+                        :delete-enabled="false"
+                        :items="runner.response?.data['logs'] ?? []"
                     >
+                        <template #item="{ item }">
+                            {{item}}
+                        </template>
+                    </items-list>
                 </template>
                 <p v-else>Send a request first to see the response.</p>
             </div>
@@ -267,6 +295,8 @@ const props = defineProps({
         type: Object as PropType<Method>,
     },
 })
+
+const activeTab = ref('stack')
 
 const runner = useLocalStorage(
     'runner.' + props.method?.id ?? props.projectId,

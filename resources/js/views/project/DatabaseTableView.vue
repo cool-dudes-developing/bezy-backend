@@ -2,6 +2,7 @@
     <div class="flex grow flex-col gap-10">
         <editor-table
             v-if="table"
+            :is-editable="isEditable"
             :columns="
                 tab === 'data'
                     ? table.columns
@@ -87,6 +88,7 @@ import EditorTable from '@/components/EditorTable.vue'
 import useModal from '@/plugins/modal'
 import DialogPopup from '@/components/modals/DialogPopup.vue'
 import DatabaseTableColumn from '@/models/DatabaseTableColumn'
+import Project from '@/models/Project'
 
 const route = computed(() => useRoute())
 
@@ -96,8 +98,12 @@ const table = computed(() =>
         .withAll()
         .find(route.value.params.table as string)
 )
+const project = computed(() =>
+    useRepo(Project).find(route.value.params.project as string) as Project
+)
 const rows = ref([])
 const tab = ref('data')
+const isEditable = computed(() => project.value?.role !== 'viewer')
 
 watch(
     () => route.value.params.table,

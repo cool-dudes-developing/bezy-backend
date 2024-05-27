@@ -8,115 +8,15 @@
             @wheel.prevent="(e) => handleWheelMove(e, paper!)"
         ></div>
         <div
-            v-if="runner"
-            class="absolute inset-0 flex items-center justify-center p-10"
-            @click.self="runner = null"
+            v-if="!method?.can_edit"
+            class="absolute left-1/2 top-0 -translate-x-1/2 rounded-b-xl border-x border-b border-petronas bg-dark/75 px-3 py-2 text-xl outline-1 backdrop-blur"
         >
-            <div
-                class="flex h-full max-h-[500px] max-w-lg grow flex-col overflow-y-auto overflow-x-hidden rounded-lg border bg-background-800"
-            >
-                <div class="sticky top-0 flex flex-col bg-background-800">
-                    <input
-                        :value="`/api/projects/${route.params.project}/methods/${props.methodId}/execute`"
-                        class="rounded bg-background p-1"
-                        disabled
-                        type="text"
-                    />
-                    <div class="grid grid-cols-2 border-b">
-                        <button
-                            :class="{
-                                'bg-background': runner === 'request',
-                            }"
-                            class="p-3"
-                            @click="runner = 'request'"
-                        >
-                            Request
-                        </button>
-                        <button
-                            :class="{
-                                'bg-background': runner === 'response',
-                            }"
-                            class="p-3"
-                            @click="runner = 'response'"
-                        >
-                            Response
-                        </button>
-                    </div>
-                </div>
-                <div class="flex grow flex-col gap-3 p-3">
-                    <template v-if="runner === 'request'">
-                        <div class="flex flex-col gap-3">
-                            <h3 class="text-lg">Params</h3>
-                            <div
-                                v-for="param in method?.blocks
-                                    .find((b) => b.name === 'start')
-                                    ?.outPorts.filter(
-                                        (p) => p.type !== 'flow'
-                                    ) ?? []"
-                                class="grid grid-cols-2"
-                            >
-                                <h4>
-                                    {{ param.name }}
-                                    <span
-                                        class="rounded-full bg-accent px-1 text-xs font-bold text-black"
-                                    >
-                                        {{ param.type }}
-                                    </span>
-                                </h4>
-                                <input
-                                    v-if="
-                                        ['string', 'number'].includes(
-                                            param.type
-                                        )
-                                    "
-                                    v-model="runnerParams[param.name]"
-                                    :placeholder="param.type"
-                                    :type="
-                                        param.type === 'string'
-                                            ? 'text'
-                                            : 'number'
-                                    "
-                                    class="bg-background"
-                                />
-                                <textarea
-                                    v-else-if="
-                                        ['object', 'array'].includes(param.type)
-                                    "
-                                    v-model="runnerParams[param.name]"
-                                    :placeholder="'JSON ' + param.type"
-                                    class="bg-background"
-                                />
-                                <input
-                                    v-else-if="param.type === 'boolean'"
-                                    v-model="runnerParams[param.name]"
-                                    class="bg-background"
-                                    type="checkbox"
-                                />
-                            </div>
-                        </div>
-                    </template>
-                    <template v-else>
-                        <div class="text-sm">
-                            Status: {{ runnerResponse?.status }}
-                            {{ runnerResponse?.statusText }}
-                        </div>
-                        <h3 class="text-lg">Response data:</h3>
-                        <pre class="bg-background">{{
-                            runnerResponse?.data
-                        }}</pre>
-                    </template>
-                </div>
-                <button
-                    :disabled="runnerLoading"
-                    class="sticky bottom-0 bg-accent py-2 font-bold text-black active:bg-accent-400 disabled:bg-accent-500"
-                    @click="sendRunner"
-                >
-                    Send
-                </button>
-            </div>
+            view only
         </div>
         <editor-tools
-            :disable-publish="method?.type === 'endpoint'"
+            :disable-publish="
+                method?.type === 'endpoint' || method?.can_edit === false
+            "
             @publish="publish"
             @run="
                 () => {
@@ -126,7 +26,6 @@
                     })
                 }
             "
-            @save="save"
         />
         <blocks-popup
             v-if="blocksPopupOpen"
@@ -463,8 +362,8 @@ function onSendMessage() {
 }
 
 onMounted(() => {
-    console.log('Initializing graph')
-    paper = createPaper()
+    console.log('Initializing graph', method.value?.can_edit)
+    paper = createPaper(method.value?.can_edit)
     initializeElements()
     registerEvents(paper)
     const throttleMouse = useThrottleFn((params) => {
@@ -480,17 +379,25 @@ onMounted(() => {
     addCursor(
         'test',
         'Nazar',
-        'Really long text that should be wrapped in three lines. Or even more',
+        'Hello guys!',
         'red',
-        290,
-        400
+        -290,
+        800
     )
-    setTimeout(() => {
-        addCursor('test', 'Nazar', 'Finish', 'green', 290, 450)
-    }, 1000)
-    setTimeout(() => {
-        addCursor('test', 'Nazar', 'Finish', 'green', 600, 400)
-    }, 2000)
+    addCursor(
+        'test2',
+        'Alex',
+        'This should work fine',
+        'green',
+        90, 390
+    )
+    addCursor(
+        'test3',
+        'Patryk',
+        '',
+        'green',
+        -10, 590
+    )
     mouseMoveHook.on((e) => {
         throttleMouse(e)
     })

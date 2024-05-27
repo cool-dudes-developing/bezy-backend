@@ -8,7 +8,7 @@
                 <div class="flex gap-2">
                     <button
                         class="flex items-center gap-2 p-1 text-xs"
-                        @click="emit('create')"
+                        @click="createDirectory()"
                     >
                         <svg-icon
                             class="h-5 w-5"
@@ -38,31 +38,68 @@
             </template>
             <template #title>Storage</template>
             <template #subtitle>Manage your project storage.</template>
+            <div
+                class="flex items-center gap-3 rounded-xl bg-accent-900 px-2 font-mono text-xs"
+            >
+                <button
+                    @click="
+                        () => {
+                            if (browsePath === '/') {
+                                return
+                            }
+                            loadFiles(
+                                browsePath.split('/').slice(0, -2).join('/') +
+                                    '/'
+                            )
+                        }
+                    "
+                >
+                    <svg-icon
+                        class="h-6 w-6"
+                        name="arrow-up"
+                    />
+                </button>
+                {{ browsePath }}
+            </div>
+            {{ editPath }}
             <items-list
-                :items="files"
+                :items="directories.concat(files)"
                 @delete="
                     api.del(`/projects/${project.value.id}/files/${$event.id}`)
                 "
+                @select="selectFile($event)"
             >
                 <template #item="{ item }">
                     <div class="flex items-center gap-2">
                         <svg-icon
                             :name="
-                                item.type.startsWith('image')
-                                    ? 'file-image'
-                                    : item.type.startsWith('folder')
-                                      ? 'folder'
-                                      : item.type.startsWith('application')
-                                        ? 'file-archive'
-                                        : item.type.startsWith('audio')
-                                          ? 'file-audio'
-                                          : item.type.startsWith('video')
-                                            ? 'file-video'
-                                            : 'file'
+                                item.type === 'directory'
+                                    ? 'folder'
+                                    : item.type.startsWith('image')
+                                      ? 'file-image'
+                                      : item.type.includes('text') ||
+                                          item.type.includes('json')
+                                        ? 'file-text'
+                                        : item.type.startsWith('folder')
+                                          ? 'folder'
+                                          : item.type.startsWith('application')
+                                            ? 'file-archive'
+                                            : item.type.startsWith('audio')
+                                              ? 'file-audio'
+                                              : item.type.startsWith('video')
+                                                ? 'file-video'
+                                                : 'file'
                             "
                             class="h-4"
                         />
-                        <p>
+                        <input
+                            v-if="editPath === item.path"
+                            v-model="item.name"
+                            class="bg-sec"
+                            @blur="renameFile(item.path, item.name)"
+                            @click.stop.prevent
+                        />
+                        <p v-else>
                             {{ item.name }}
                         </p>
                     </div>
@@ -73,8 +110,17 @@
                         files manually or through the API.
                     </p>
                 </template>
-                <template #additional-actions="{item}">
-                    <button @click="downloadItem(item)">
+                <template #additional-actions="{ item }">
+                    <button @click.stop.prevent="editPath = item.path">
+                        <svg-icon
+                            class="h-4 w-4"
+                            name="file-pen"
+                        />
+                    </button>
+                    <button
+                        v-if="item.type !== 'directory'"
+                        @click.stop.prevent="downloadItem(item)"
+                    >
                         <svg-icon
                             class="h-4 w-4"
                             name="file-down"
@@ -115,15 +161,26 @@ const project = computed(() =>
 
 pageSpinner?.show()
 const files = ref([])
+const directories = ref([])
+const browsePath = ref('/')
+const editPath = ref('')
+
+function loadFiles(path: string) {
+    browsePath.value = path
+    api.get(`/projects/${route.value.params.project}/files`, {
+        params: {
+            path,
+        },
+    }).then((response) => {
+        files.value = response.data.files
+        directories.value = response.data.directories
+    })
+}
 
 onMounted(() => {
     Project.fetch(route.value.params.project as string)
         .then(() => {
-            api.get(`/projects/${route.value.params.project}/files`).then(
-                (response) => {
-                    files.value = response.data
-                }
-            )
+            loadFiles(browsePath.value)
         })
         .catch(() => router.push({ name: '404' }))
         .finally(() => pageSpinner?.hide())
@@ -136,6 +193,21 @@ function downloadItem(item) {
     link.click()
 }
 
+function selectFile(file) {
+    if (file.type === 'directory') {
+        loadFiles(browsePath.value + file.name + '/')
+    }
+}
+
+function createDirectory(name: string | undefined) {
+    api.post(`/projects/${project.value.id}/files`, {
+        name: name || 'New Folder',
+        path: browsePath.value,
+    }).then((res) => {
+        directories.value.push(res.data)
+    })
+}
+
 function uploadFiles(payload, close, m, force = false) {
     const [filesToUpload] = payload as [FileList]
     const formData = new FormData()
@@ -145,6 +217,7 @@ function uploadFiles(payload, close, m, force = false) {
     }
 
     formData.append('force', force ? 1 : 0)
+    formData.append('path', browsePath.value)
 
     api.post(`/projects/${project.value.id}/files`, formData, {
         headers: {
@@ -185,5 +258,15 @@ function uploadFiles(payload, close, m, force = false) {
                 )
             }
         })
+}
+
+function renameFile(path, name) {
+    api.put(`/projects/${project.value.id}/files/${name}`, {
+        path,
+        name,
+    }).then(() => {
+        editPath.value = ''
+        loadFiles(browsePath.value)
+    })
 }
 </script>

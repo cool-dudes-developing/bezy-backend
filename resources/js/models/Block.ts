@@ -22,6 +22,7 @@ export default class Block extends Model {
     @Uid() declare id: string
     @Attr(null) declare method_id: string | null
     @Attr(null) declare block_id: string | null
+    @Attr(null) declare project_id: string | null
     @Str('') declare name: string
     @Str('') declare title: string
     @Str('') declare type: string

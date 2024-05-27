@@ -4,7 +4,7 @@
             <router-link
                 :to="{
                     name: 'tables',
-                    params: { project },
+                    params: { project: projectId },
                 }"
             >
                 <svg-icon
@@ -18,40 +18,41 @@
                 Tables
             </h3>
         </div>
-<!--        <ul class="overflow-hidden rounded divide-y divide-acc">-->
-<!--            <router-link-->
-<!--                v-for="table in tables"-->
-<!--                v-slot="{ href, navigate }"-->
-<!--                :to="{ name: 'table', params: { project, table: table.id } }"-->
-<!--                custom-->
-<!--            >-->
-<!--                <li-->
-<!--                    :class="{-->
-<!--                        'bg-sec': table.id === tableId,-->
-<!--                    }"-->
-<!--                    class="cursor-pointer px-2"-->
-<!--                    @click="navigate"-->
-<!--                >-->
-<!--                    <edit-text-input-->
-<!--                        v-model="table.name"-->
-<!--                        @save="-->
-<!--                            DatabaseTable.update(project, table.id, {-->
-<!--                                name: $event,-->
-<!--                            })-->
-<!--                        "-->
-<!--                    />-->
-<!--                </li>-->
-<!--            </router-link>-->
-<!--        </ul>-->
+        <!--        <ul class="overflow-hidden rounded divide-y divide-acc">-->
+        <!--            <router-link-->
+        <!--                v-for="table in tables"-->
+        <!--                v-slot="{ href, navigate }"-->
+        <!--                :to="{ name: 'table', params: { project, table: table.id } }"-->
+        <!--                custom-->
+        <!--            >-->
+        <!--                <li-->
+        <!--                    :class="{-->
+        <!--                        'bg-sec': table.id === tableId,-->
+        <!--                    }"-->
+        <!--                    class="cursor-pointer px-2"-->
+        <!--                    @click="navigate"-->
+        <!--                >-->
+        <!--                    <edit-text-input-->
+        <!--                        v-model="table.name"-->
+        <!--                        @save="-->
+        <!--                            DatabaseTable.update(project, table.id, {-->
+        <!--                                name: $event,-->
+        <!--                            })-->
+        <!--                        "-->
+        <!--                    />-->
+        <!--                </li>-->
+        <!--            </router-link>-->
+        <!--        </ul>-->
         <items-list
             :items="tables"
             :selected="tableId"
+            :delete-enabled="isEditable"
             pointer
-            @delete="DatabaseTable.destroy(project, $event.id)"
+            @delete="DatabaseTable.destroy(projectId, $event.id)"
             @select="
                 router.push({
                     name: 'table',
-                    params: { project, table: $event.id },
+                    params: { project: projectId, table: $event.id },
                 })
             "
         >
@@ -59,7 +60,7 @@
                 <edit-text-input
                     v-model="item.name"
                     @save="
-                        Method.update(project, item.id, {
+                        Method.update(projectId, item.id, {
                             title: $event,
                         })
                     "
@@ -78,18 +79,21 @@ import SvgIcon from '@/components/SvgIcon.vue'
 import Method from '@/models/Method'
 import EditTextInput from '@/components/EditTextInput.vue'
 import ItemsList from '@/components/ItemsList.vue'
+import Project from '@/models/Project'
 
 const tables = computed(() => {
     return useRepo(DatabaseTable).all()
 })
 
 const route = useRoute()
-const router =  useRouter()
-const project = computed(() => route.params.project as string)
+const router = useRouter()
+const projectId = computed(() => route.params.project as string)
 const tableId = computed(() => route.params.table as string)
+const project = computed(() => useRepo(Project).find(projectId.value))
+const isEditable = computed(() => project.value?.role !== 'viewer')
 
 onMounted(() => {
-    DatabaseTable.fetchAll(project.value)
+    DatabaseTable.fetchAll(projectId.value)
 })
 </script>
 

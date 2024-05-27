@@ -1,6 +1,6 @@
 <template>
     <div class="p-10">
-        <v-card v-if="project" @create="router.push({
+        <v-card :disable-create="project.role !== 'owner'" v-if="project" @create="router.push({
             name: 'projectTeamInvite',
             params: { project: project.id }
         })">

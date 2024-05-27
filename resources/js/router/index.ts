@@ -18,6 +18,14 @@ const routes: Array<RouteRecordRaw> = [
             import(/* webpackChunkName: "about" */ '../views/AboutView.vue'),
     },
     {
+        path: '/reset-password/:token',
+        name: 'reset-password',
+        component: () =>
+            import(
+                /* webpackChunkName: "reset-password" */ '../views/ResetPasswordView.vue'
+            ),
+    },
+    {
         path: '/platform',
         name: 'platform',
         redirect: { name: 'recent' },
@@ -55,7 +63,7 @@ const routes: Array<RouteRecordRaw> = [
                 component: () =>
                     import(
                         /* webpackChunkName: "sharedProjects" */ '../views/LikedAssetsView.vue'
-                        ),
+                    ),
             },
             {
                 path: 'onboarding',
@@ -160,6 +168,14 @@ const routes: Array<RouteRecordRaw> = [
                 component: () =>
                     import(
                         /* webpackChunkName: "createProject" */ '../views/ProjectCreateView.vue'
+                    ),
+            },
+            {
+                path: 'blocks/:block',
+                name: 'blockPreview',
+                component: () =>
+                    import(
+                        /* webpackChunkName: "blockPreview" */ '../views/BlockPreviewView.vue'
                     ),
             },
             {
