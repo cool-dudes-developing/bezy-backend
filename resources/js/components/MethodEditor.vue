@@ -376,28 +376,6 @@ onMounted(() => {
         channel.whisper('event', params)
     }, 200)
 
-    addCursor(
-        'test',
-        'Nazar',
-        'Hello guys!',
-        'red',
-        -290,
-        800
-    )
-    addCursor(
-        'test2',
-        'Alex',
-        'This should work fine',
-        'green',
-        90, 390
-    )
-    addCursor(
-        'test3',
-        'Patryk',
-        '',
-        'green',
-        -10, 590
-    )
     mouseMoveHook.on((e) => {
         throttleMouse(e)
     })
