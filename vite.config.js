@@ -7,7 +7,7 @@ import svgLoader from 'vite-svg-loader'
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/main.ts'],
+            input: ['resources/js/main.ts', 'resources/css/app.css', 'resources/js/style/index.css'],
             refresh: false,
         }),
         vue({
@@ -28,7 +28,9 @@ export default defineConfig({
                 },
             },
         }),
-        svgLoader(),
+        svgLoader({
+            defaultImport: 'component',
+        }),
     ],
     resolve: {
         alias: {
